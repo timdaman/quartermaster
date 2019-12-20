@@ -1,0 +1,14 @@
+[Unit]
+Description=VirtualHere USB Sharing
+
+### Warning, the following line needs to be commented out on CentOS
+Requires=networking.service
+###
+
+After=networking.service
+[Service]
+ExecStartPre=/bin/sh -c 'logger VirtualHere settling...;sleep 1s;logger VirtualHere settled'
+ExecStart=/usr/local/bin/vhusbdx86_64 -c /etc/VirtualHere.ini
+Type=idle
+[Install]
+WantedBy=multi-user.target

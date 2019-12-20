@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+mypy = "*"
+
+[packages]
+django = "*"
+huey = "*"
+requests = "*"
+django-bootstrap4 = "*"
+paramiko = "*"
+redis = "*"
+gunicorn = "*"
+django-auth-ldap = "*"
+djangorestframework = "*"
+filelock = "*"
+psycopg2-binary = "*"
+
+[requires]
+python_version = "3.7"

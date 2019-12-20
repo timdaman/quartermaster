@@ -1,0 +1,6 @@
+.idea
+config.ini
+test_key*
+tls*
+ssh_private_key
+deploy/static

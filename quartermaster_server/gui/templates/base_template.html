@@ -1,0 +1,35 @@
+<head>
+    <meta http-equiv="refresh" content="60">
+</head>
+
+{% load bootstrap4 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript jquery='slim' %}
+<nav class="navbar navbar-expand-sm navbar-light bg-light">
+    <a class="navbar-brand" href="{{ server_base_url }}">Quartermaster</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            
+        </ul>
+        <ul class="navbar-nav mr-auto">
+            {% if user.is_authenticated %}
+                <li class="nav-item active">
+                    <span class="navbar-text">Logged in as {{ user.username }}, </span>
+                    <a class="navbar-text" href="{% url 'logout' %}">click here to logout<span
+                            class="sr-only">(current)</span></a>
+                </li>
+            {% endif %}
+
+        </ul>
+    </div>
+
+</nav>
+{% bootstrap_messages %}
+
+{% block body %}
+{% endblock %}

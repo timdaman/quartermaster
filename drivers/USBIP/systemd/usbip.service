@@ -1,0 +1,10 @@
+[Unit]
+Description=USB/IP USB Sharing
+#Requires=networking.service
+After=networking.service
+[Service]
+ExecStartPre=/sbin/modprobe vhci_hcd
+ExecStart=/sbin/usbipd
+Type=idle
+[Install]
+WantedBy=multi-user.target

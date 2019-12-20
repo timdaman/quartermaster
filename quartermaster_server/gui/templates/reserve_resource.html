@@ -1,0 +1,29 @@
+{% extends "base_template.html" %}
+{% block body %}
+    <div><span style="font-weight: bold">Resource</span>: {{ resource }}</div>
+    <div><span style="font-weight: bold">Reserved by</span>: {{ resource.user.username }} for {{ resource.used_for }}
+    </div>
+    <div><span style="font-weight: bold">Reserved since</span>: {{ resource.last_reserved }}</div>
+    <div>
+        <form action="{% url 'gui:view_reservation' resource_pk=resource.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="DELETE" name="DELETE" value="true">
+            <button type="submit" class="btn btn-primary mb-2">Release Reservation</button>
+        </form>
+    </div>
+
+
+    <div class="alert alert-danger" role="alert">
+        This page must be open or client running to keep this reservation active
+    </div>
+
+    <h6>To use run the Quartermaster client with the following command</h6>
+
+    <p><code>
+        quartermaster_client
+        {{ server_base_url }}{% url 'api:show_reservation_with_password' resource_pk=resource.pk resource_password=resource.use_password %}
+    </code></p>
+    {% load static %}
+    <a href="{% url 'client:download_client' %}">Download quartermaster client</a>
+
+{% endblock %}
