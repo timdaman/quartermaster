@@ -1,0 +1,69 @@
+version: "3"
+services:
+  backend:
+    image: ${docker_registry}/quartermaster/backend:${version:-UNSET}
+    build:
+      dockerfile: deploy/Dockerfile-backend
+      context: .
+    depends_on:
+      - db
+    ports:
+      - 8001:8000
+    volumes:
+      - ./ssh_private_key:/ssh_private_key:ro
+      - ./config.ini:/config.ini:ro
+    networks:
+      - internal
+
+  tasks:
+    image: ${docker_registry}/quartermaster/backend:${version:-UNSET}
+    networks:
+      - internal
+    entrypoint: [ "python", "./manage.py", "run_huey" ]
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./ssh_private_key:/ssh_private_key:ro
+      - ./config.ini:/config.ini:ro
+
+  redis:
+    image: redis:5
+    networks:
+      - internal
+
+  frontend:
+    image: ${docker_registry}/quartermaster/frontend:${version:-UNSET}
+    build:
+      dockerfile: deploy/Dockerfile-frontend
+      context: .
+    depends_on:
+      - backend
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./tls.key:/tls.key:ro
+      - ./tls_chain.crt:/tls_chain.crt:ro
+    networks:
+      - internal
+
+  db:
+    image: postgres:12.1-alpine
+    volumes:
+      - quartermaster_db:/var/lib/postgresql/data:rw
+      - ./tls_chain.crt:/tls_chain.crt:ro
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      POSTGRES_USER: quartermaster
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: quartermaster
+    networks:
+      - internal
+volumes:
+  quartermaster_db:
+
+networks:
+  internal:
+    driver: bridge
