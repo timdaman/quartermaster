@@ -30,7 +30,7 @@ def update_reservations():
 @lock_task('confirm_device_state')
 def confirm_device_state():
     for device in Device.objects.all():
-        device_driver: AbstractShareableUsbDevice = device.get_driver()
+        device_driver: AbstractShareableUsbDevice = device.get_driver_obj()
         try:
             being_shared = device_driver.is_shared()
         except AbstractShareableUsbDevice.DeviceError:
@@ -51,7 +51,7 @@ def confirm_device_state():
 @lock_task('confirm_devices_are_online')
 def confirm_devices_are_online():
     for device in Device.everything.all():
-        device_driver: AbstractShareableUsbDevice = device.get_driver()
+        device_driver: AbstractShareableUsbDevice = device.get_driver_obj()
         try:
             device.online = device_driver.is_online()
             device.save()

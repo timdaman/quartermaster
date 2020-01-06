@@ -3,12 +3,10 @@
 from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 from rest_framework import serializers, generics, status, permissions, authentication
 from rest_framework.response import Response
 
-from data.models import Resource, Device
+from data.models import Resource
 from quartermaster.allocator import make_reservation, release_reservation, refresh_reservation
 
 

@@ -14,10 +14,8 @@ django-bootstrap4 = "*"
 paramiko = "*"
 redis = "*"
 gunicorn = "*"
-django-auth-ldap = "*"
 djangorestframework = "*"
-filelock = "*"
+filelock = "*"  # TODO: Move client management out of server
 psycopg2-binary = "*"
-
 [requires]
 python_version = "3.7"

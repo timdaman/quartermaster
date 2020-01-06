@@ -12,6 +12,3 @@ LDAP_SERVER_URI = ldap://ldap.example.co
 LDAP_SUBTREE = OU=People,DC=example,DC=com
 SERVER_BASE_URL = https://quartermaster.example.co
 TEAMCITY_RESERVATION_USERNAME = teamcity
-ENABLED_USB_DRIVERS=VirtualHere,UsbipOverSSH
-; currently supported CI system is `teamcity`
-ENABLED_CI=

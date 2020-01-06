@@ -1,58 +1,45 @@
-import json
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from django.contrib.auth.models import User
-from django.test import TestCase
-from django.utils.timezone import utc
+import pytest
+# from quartermaster_server.data.models import Pool, Resource, Device
+from pytz import utc
 
-from data.models import Pool, Resource, Device
+from data.models import Resource
 from quartermaster import allocator
 
 
-class AllocatorTestSuite(TestCase):
+@pytest.mark.django_db(transaction=True)
+def test_make_reservation(admin_user, sample_unshared_resource: Resource, monkeypatch):
+    assert sample_unshared_resource.user != admin_user
+    mock_for_all_devices = MagicMock()
+    monkeypatch.setattr(allocator, 'for_all_devices', mock_for_all_devices)
+    allocator.make_reservation(sample_unshared_resource, admin_user, used_for='TEST')
+    assert mock_for_all_devices.call_count == 1
+    assert 'share' in mock_for_all_devices.call_args[0]
+    sample_unshared_resource.refresh_from_db(fields=['user'])
+    assert sample_unshared_resource.user == admin_user
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.user = User.objects.create_superuser(username="TEST_USER_ALLOCATE",
-                                                 email="not_real@example.com",
-                                                 password="lolSecret")
-        cls.pool = Pool.objects.create(name='TEST_POOL_ALLOCATE')
-        cls.resource = Resource.objects.create(pool=cls.pool, name=f"RESOURCE_1_ALLOCATE")
-        device_config = {'host': '127.0.0.3', 'bus_id': '1-11'}
-        cls.device = Device.objects.create(resource=cls.resource, driver='UsbipOverSSH',
-                                           config_json=json.dumps(device_config), name=f"Device 1-11")
-        super().setUpClass()
 
-    def setUp(self) -> None:
-        self.resource.user = None
-        self.resource.used_for = ''
-        self.resource.save()
+@pytest.mark.django_db(transaction=True)
+def test_update_reservation(sample_shared_resource: Resource):
+    old_timestamp = datetime(year=200, month=1, day=1, tzinfo=utc)
+    sample_shared_resource.last_check_in = old_timestamp
+    sample_shared_resource.save()
 
-    def test_make_reservation(self):
-        with patch('driver_UsbipOverSSH.UsbipOverSSH.share') as share_devices:
-            allocator.make_reservation(self.resource, self.user, used_for='TEST')
-            self.assertEqual(share_devices.call_count, 1)
-            self.resource.refresh_from_db()
-            self.assertEquals(self.resource.user, self.user)
+    allocator.update_reservation(sample_shared_resource)
+    sample_shared_resource.refresh_from_db(fields=['last_check_in'])
+    assert sample_shared_resource.last_check_in != old_timestamp
 
-    def test_update_reservation(self):
-        old_timestamp = datetime(year=200, month=1, day=1, tzinfo=utc)
-        self.resource.last_check_in = old_timestamp
-        self.resource.user = self.user
-        self.resource.save()
 
-        allocator.update_reservation(self.resource)
+@pytest.mark.django_db(transaction=True)
+def test_release_reservation(sample_shared_resource, monkeypatch):
+    mock_for_all_devices = MagicMock()
+    monkeypatch.setattr(allocator, 'for_all_devices', mock_for_all_devices)
 
-        self.resource.refresh_from_db()
-        self.assertNotEqual(self.resource.last_check_in, old_timestamp)
+    allocator.release_reservation(sample_shared_resource)
 
-    def test_release_reservation(self):
-        with patch('driver_UsbipOverSSH.UsbipOverSSH.unshare') as unshare_devices:
-            self.resource.user = self.user
-            self.resource.save()
-
-            allocator.release_reservation(self.resource)
-            self.assertEqual(unshare_devices.call_count, 1)
-            self.resource.refresh_from_db()
-            self.assertIsNone(self.resource.user)
+    assert mock_for_all_devices.call_count == 1
+    assert 'unshare' in mock_for_all_devices.call_args[0]
+    sample_shared_resource.refresh_from_db(fields=['user'])
+    assert sample_shared_resource.user is None

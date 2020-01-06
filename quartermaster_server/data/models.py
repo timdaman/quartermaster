@@ -10,13 +10,12 @@ from django.forms import Textarea
 from django.utils.functional import lazy
 
 from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
-from quartermaster.helpers import get_driver
+from quartermaster.helpers import get_driver_obj
 
 
 class Pool(models.Model):
     """
     A pool is a collection fo resources that a reasonably similar
-    They can optionally be associated with a TeamCity Shared Resource
     """
 
     name = models.SlugField(blank=False, null=False, primary_key=True)
@@ -70,8 +69,7 @@ class Resource(models.Model):
 
 
 def loaded_drivers():
-    return list(((driver.__name__, driver.__name__)
-                 for driver in AbstractShareableUsbDevice.__subclasses__()))
+    return sorted(list(((driver.__name__, driver.__name__) for driver in AbstractShareableUsbDevice.__subclasses__())))
 
 
 class DeviceHideOfflineManager(models.Manager):
@@ -115,7 +113,7 @@ class Device(models.Model):
         return self.resource.in_use
 
     def get_driver(self):
-        return get_driver(self)
+        return get_driver_obj(self)
 
     def clean(self):
         # Check valid driver is used
@@ -132,12 +130,6 @@ class DeviceInline(admin.TabularInline):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
-
-    # def formfield_for_choice_field(self, db_field, request, **kwargs):
-    #     if db_field.name == 'driver':
-    #         kwargs['choices'] = ((driver.__name__, driver.__name__)
-    #                              for driver in AbstractShareableUsbDevice.__subclasses__())
-    #     return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
 class ResourceAdmin(admin.ModelAdmin):

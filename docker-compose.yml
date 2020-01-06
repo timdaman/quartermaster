@@ -28,7 +28,9 @@ services:
       - ./config.ini:/config.ini:ro
 
   redis:
-    image: redis:5
+    image: redis:5-alpine
+    ports:
+      - 127.0.0.1:6379:6379
     networks:
       - internal
 
@@ -49,7 +51,7 @@ services:
       - internal
 
   db:
-    image: postgres:12.1-alpine
+    image: postgres:12.1
     volumes:
       - quartermaster_db:/var/lib/postgresql/data:rw
       - ./tls_chain.crt:/tls_chain.crt:ro

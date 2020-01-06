@@ -16,10 +16,6 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
-import ldap
-import paramiko
-from django_auth_ldap.config import LDAPSearch
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Are we in a docker environment or not?
@@ -60,7 +56,7 @@ DEBUG = True
 SERVER_BASE_URL = find_setting('SERVER_BASE_URL')
 parsed_server_base_url = urlparse(SERVER_BASE_URL)
 
-ALLOWED_HOSTS = ['backend', 'localhost', parsed_server_base_url.netloc]
+ALLOWED_HOSTS = ['backend', '127.0.0.1', 'localhost', parsed_server_base_url.netloc]
 
 # Application definition
 
@@ -71,26 +67,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'data',  # This is the core datastore that everything else hangs off of
     'huey.contrib.djhuey',  # Provides Task scheduling
     'rest_framework',  # Makes nice API
     'rest_framework.authtoken',  # Only needed if using clients that self authenticate such as in CI
     'bootstrap4',  # Styling for user GUI
-    'data',  # This is the core datastore that everything else hangs off of
     'gui',  # UI for user interactive interface
     'api',  # API, used to support client
     'client',  # Download link for client software
+    'Teamcity',  # Support for TeamCity CI servers
+    'UsbipOverSSH',  # Support for managing USB/IP resources over SSH
+    'VirtualHere'  # Support for managing VirtualHere resources over SSH
 ]
-
-ci_to_add = find_setting('ENABLED_CI').split(',')
-if ci_to_add != ['']:
-    INSTALLED_APPS.extend([f"ci_{driver}" for driver in ci_to_add])
-
-drivers_to_add = find_setting('ENABLED_USB_DRIVERS').split(',')
-if drivers_to_add != ['']:
-    INSTALLED_APPS.extend([f"driver_{driver}" for driver in drivers_to_add])
-else:
-    print("*****Warning, no drivers are enabled. Quartermaster can do much without them. "
-          "Configure some by setting `ENABLED_USB_DRIVERS`")
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -137,6 +125,11 @@ DATABASES = {
         'USER': 'quartermaster',
         'PASSWORD': 'password',
         'HOST': 'localhost',
+        'PORT': 5432,
+        'TEST': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:'
+        }
     }
 }
 
@@ -197,38 +190,6 @@ LOGOUT_REDIRECT_URL = 'login'
 
 RESERVATION_MAX_MINUTES = timedelta(minutes=int(find_setting('RESERVATION_MAX_MINUTES')))
 RESERVATION_CHECKIN_TIMEOUT_MINUTES = timedelta(minutes=int(find_setting('RESERVATION_CHECKIN_TIMEOUT_MINUTES')))
-SSH_USERNAME = find_setting('SSH_USERNAME')
-SSH_PRIVATE_KEY_FILE = find_setting('SSH_PRIVATE_KEY_FILE')
-SSH_PRIVATE_KEY = paramiko.Ed25519Key(filename=SSH_PRIVATE_KEY_FILE)
-
-########### LDAP CONFIGURATION ###########
-AUTHENTICATION_BACKENDS = (
-    "django_auth_ldap.backend.LDAPBackend",
-    "django.contrib.auth.backends.ModelBackend"
-)
-# Baseline configuration.
-AUTH_LDAP_SERVER_URI = find_setting('LDAP_SERVER_URI')
-AUTH_LDAP_START_TLS = True
-AUTH_LDAP_BIND_DN = find_setting('LDAP_BIND_USER')
-AUTH_LDAP_BIND_PASSWORD = find_setting('LDAP_BIND_PASSWORD')
-AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    find_setting('LDAP_SUBTREE'), ldap.SCOPE_SUBTREE, "sAMAccountName=%(user)s"
-)
-AUTH_LDAP_USER_ATTR_MAP = {
-    "username": "sAMAccountName",
-    "first_name": "givenName",
-    "last_name": "sn",
-    "email": "mail",
-}
-# If you are having LDAP issues this may help debug them
-# ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
-
-# TODO: Set this up
-# AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-#     "is_active": "cn=active,ou=django,ou=groups,dc=example,dc=com",
-#     "is_staff": "cn=staff,ou=django,ou=groups,dc=example,dc=com",
-#     "is_superuser": "cn=superusers,ou=django,ou=groups,dc=example,dc=com",
-# }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -243,7 +204,6 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"django_auth_ldap": {"level": "DEBUG", "handlers": ["console"]}},
 }
 
 STATIC_ROOT = Path(BASE_DIR) / '../deploy/static'
