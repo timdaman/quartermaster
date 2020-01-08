@@ -13,16 +13,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import RedirectView
+from django.urls import path
 
+from .views import build_reservation
+
+app_name = __package__
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('api/', include('api.urls')),
-    path('gui/', include('gui.urls')),
-    path('client/', include('client.urls')),
-    # path('teamcity/', include('teamcity.urls')),
-    path('', RedirectView.as_view(url='/gui/resource/'), name='index'),
+    path('build/<int:build_id>', build_reservation, name="build_reservation")
 ]
