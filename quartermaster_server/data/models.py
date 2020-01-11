@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 
 from django.conf import settings
 from django.contrib import admin
@@ -117,8 +118,10 @@ class Device(models.Model):
 
     def clean(self):
         # Check valid driver is used
-        driver: AbstractShareableUsbDevice = self.get_driver()
-
+        try:
+            driver: AbstractShareableUsbDevice = self.get_driver()
+        except JSONDecodeError as e:
+            raise ValidationError({'config_json': f"Invalid JSON, {e.msg}"})
         errors = driver.validate_configuration()
         errors_message = ', '.join(errors)
         if errors:

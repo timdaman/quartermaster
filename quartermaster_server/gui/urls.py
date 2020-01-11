@@ -18,6 +18,7 @@ from django.views.generic import RedirectView
 
 from gui.views import list_resources, ReservationView
 
+
 app_name = 'gui'
 urlpatterns = [
     path('resource/<str:resource_pk>', ReservationView.as_view(), name="view_reservation"),

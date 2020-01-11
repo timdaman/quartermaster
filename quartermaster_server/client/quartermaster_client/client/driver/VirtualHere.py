@@ -38,11 +38,14 @@ class VirtualHere(LocalDriver):
     @staticmethod
     def mac_find_vh() -> Optional[str]:
         try:
-            output = subprocess.check_output(('pgrep', '-lf', 'VirtualHere.app/Contents/MacOS/VirtualHere'),
+            app_name_fragment = 'VirtualHere.app/Contents/MacOS/VirtualHere'
+            output = subprocess.check_output(('pgrep', '-lf', app_name_fragment),
                                              encoding='utf-8')
-            # Find path in output, assume it looks like
+            # Find path in output, assume it looks like on the following
             # '18643 /Applications/VirtualHere.app/Contents/MacOS/VirtualHere'
-            return output.splitlines()[0].split(' ', maxsplit=1)[1]
+            # '1598 /Applications/VirtualHere.app/Contents/MacOS/VirtualHere --log=OSEventLog -n'
+            match = re.match(f"^\d+ (?P<cmd>.+{app_name_fragment})", output.splitlines()[0])
+            return match['cmd']
         except subprocess.CalledProcessError:
             # Assume process is not running
             return None

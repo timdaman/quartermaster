@@ -1,7 +1,6 @@
 version: "3"
 services:
   backend:
-    image: ${docker_registry}/quartermaster/backend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-backend
       context: .
@@ -10,23 +9,30 @@ services:
     ports:
       - 8001:8000
     volumes:
+      - ./quartermaster_server/quartermaster/settings/north_docker_settings.py:/quartermaster/quartermaster/settings/north_docker_settings.py
       - ./ssh_private_key:/ssh_private_key:ro
       - ./config.ini:/config.ini:ro
+    environment:
+      - DJANGO_SETTINGS_MODULE=quartermaster.settings.north_docker_settings
     networks:
       - internal
 
   tasks:
-    image: ${docker_registry}/quartermaster/backend:${version:-UNSET}
-    networks:
-      - internal
+    build:
+      dockerfile: deploy/Dockerfile-backend
+      context: .
     entrypoint: [ "python", "./manage.py", "run_huey" ]
     depends_on:
       - redis
       - db
     volumes:
+      - ./quartermaster_server/quartermaster/settings/north_docker_settings.py:/quartermaster/quartermaster/settings/north_docker_settings.py
       - ./ssh_private_key:/ssh_private_key:ro
       - ./config.ini:/config.ini:ro
-
+    environment:
+      - DJANGO_SETTINGS_MODULE=quartermaster.settings.north_docker_settings
+    networks:
+      - internal
   redis:
     image: redis:5-alpine
     ports:
@@ -35,7 +41,6 @@ services:
       - internal
 
   frontend:
-    image: ${docker_registry}/quartermaster/frontend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-frontend
       context: .
@@ -54,7 +59,6 @@ services:
     image: postgres:12.1
     volumes:
       - quartermaster_db:/var/lib/postgresql/data:rw
-      - ./tls_chain.crt:/tls_chain.crt:ro
     ports:
       - 127.0.0.1:5432:5432
     environment:

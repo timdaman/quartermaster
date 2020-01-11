@@ -4,3 +4,10 @@ test_key*
 tls*
 ssh_private_key
 deploy/static
+*settings.py
+!example_settings.py
+__pycache__
+**/__pycache__
+**/.DS_Store
+quartermaster_server/quartermaster/settings.py
+!quartermaster_server/quartermaster/settings/example_settings.py

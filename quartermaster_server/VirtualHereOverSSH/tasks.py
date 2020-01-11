@@ -5,7 +5,7 @@ from huey import crontab
 from huey.contrib.djhuey import db_periodic_task, lock_task
 
 from data.models import Device
-from VirtualHere import VirtualHere
+from VirtualHereOverSSH import VirtualHereOverSSH
 
 logger = logging.getLogger(__name__)
 

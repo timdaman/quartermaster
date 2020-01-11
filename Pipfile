@@ -15,7 +15,6 @@ paramiko = "*"
 redis = "*"
 gunicorn = "*"
 djangorestframework = "*"
-filelock = "*"  # TODO: Move client management out of server
 psycopg2-binary = "*"
 [requires]
 python_version = "3.7"

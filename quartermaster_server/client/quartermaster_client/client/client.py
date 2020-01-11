@@ -4,6 +4,7 @@ import json
 import logging
 import signal
 import socket
+import ssl
 import sys
 from argparse import Namespace, ArgumentParser
 from asyncio import CancelledError
@@ -113,7 +114,7 @@ async def get_resource_status(url: str, config: Namespace, teardown: asyncio.Eve
         refresh_successful = None
         for _ in range(0, REFRESH_RETRY_LIMIT):
             try:
-                refresh_successful = refresh_reservation(url, config.auth_token)
+                refresh_successful = refresh_reservation(url, config.auth_token, config.disable_validation)
                 break
             except Exception:
                 await asyncio.sleep(REFRESH_RETRY_SLEEP)
@@ -154,8 +155,10 @@ class QuartermasterServerError(Exception):
     pass
 
 
-def quartermaster_request(url: str, method: str, token: Optional[str] = None, data: Optional[bytes] = None) \
-        -> [int, bytes, str]:
+def quartermaster_request(url: str, method: str,
+                          token: Optional[str] = None,
+                          data: Optional[bytes] = None,
+                          disable_validation=False) -> [int, bytes, str]:
     headers = {'Accept': 'application/json',
                "Quartermaster_client_version": VERSION}
     if token:
@@ -171,9 +174,12 @@ def quartermaster_request(url: str, method: str, token: Optional[str] = None, da
 
     req = Request(**request_args)
 
+    extra_urlopen_args = {}
+    if disable_validation:
+        extra_urlopen_args['context'] = ssl._create_unverified_context()
     try:
         # TODO: Probably should add a retry loop here
-        response = urlopen(req, timeout=10)
+        response = urlopen(req, timeout=10, **extra_urlopen_args)
         http_code = response.code
         content = response.read()
         final_url = response.geturl()
@@ -191,7 +197,8 @@ def quartermaster_request(url: str, method: str, token: Optional[str] = None, da
 
 
 def get_quartermaster_reservation(url: str, message: Optional[str],
-                                  auth_token: Optional[str] = None) -> Reservation:
+                                  auth_token: Optional[str] = None,
+                                  disable_validation=False) -> Reservation:
     # POST method because data is being passed. Server will create a reservation, or if the token own already
     # has one it will return the already active reservation
 
@@ -203,7 +210,8 @@ def get_quartermaster_reservation(url: str, message: Optional[str],
     http_code, content, final_url = quartermaster_request(url=url,
                                                           token=auth_token,
                                                           method='POST',
-                                                          data=data)
+                                                          data=data,
+                                                          disable_validation=disable_validation)
 
     if http_code == 404:
         raise QuartermasterServerError(f"That reservation was not found")
@@ -217,10 +225,11 @@ def get_quartermaster_reservation(url: str, message: Optional[str],
                        reservation_url=url, auth_token=auth_token)
 
 
-def refresh_reservation(url: str, auth_token: Optional[str] = None) -> bool:
+def refresh_reservation(url: str, auth_token: Optional[str] = None, disable_validation=False) -> bool:
     http_code, content, _ = quartermaster_request(url=url,
                                                   token=auth_token,
-                                                  method='PATCH')
+                                                  method='PATCH',
+                                                  disable_validation=disable_validation)
     if http_code == 404:
         return False
     elif http_code != 202:
@@ -228,11 +237,12 @@ def refresh_reservation(url: str, auth_token: Optional[str] = None) -> bool:
     return True
 
 
-def cancel_reservation(url: str, auth_token: Optional[str] = None) -> bool:
+def cancel_reservation(url: str, auth_token: Optional[str] = None, disable_validation=False) -> bool:
     print(f"Canceling reservation {url}")
     http_code, content, _ = quartermaster_request(url=url,
                                                   token=auth_token,
-                                                  method='DELETE')
+                                                  method='DELETE',
+                                                  disable_validation=disable_validation)
     if http_code == 204:
         print("Reservation canceled successfully")
         return True
@@ -338,6 +348,8 @@ def load_arguments(args: List[str], reservation_message=None, auth_token=None, r
                         help="How many seconds to wait between checks to ensure devices are connected")
     parser.add_argument("--reservation_polling", type=int, default=60,
                         help="How many seconds to wait between checks to ensure resource reservation is still active")
+    parser.add_argument("--disable_validation", action='store_true',
+                        help="Disable TLS validation of server certificates")
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--stop_client", action='store_true',
@@ -363,7 +375,8 @@ def main(args: List[str]):
     try:
         reservation = get_quartermaster_reservation(url=config.quartermaster_url,
                                                     auth_token=config.auth_token,
-                                                    message=config.reservation_message)
+                                                    message=config.reservation_message,
+                                                    disable_validation=config.disable_validation)
         print(f"Reservation active for resource {reservation.resource_url}")
         preflight_checks(reservation)
         asyncio.run(start_tasks(reservation, config), debug=config.debug)
@@ -373,7 +386,8 @@ def main(args: List[str]):
         if reservation is not None:
             print(f"Canceling reservation for resource {reservation.resource_url}, please wait")
             try:
-                cancel_reservation(url=reservation.reservation_url, auth_token=reservation.auth_token)
+                cancel_reservation(url=reservation.reservation_url, auth_token=reservation.auth_token,
+                                   disable_validation=config.disable_validation)
             except Exception as ee:
                 print(f"We got an exception while trying to cancel our reservation: {ee}")
 
@@ -383,7 +397,8 @@ def main(args: List[str]):
 
     if reservation is not None:
         print(f"Canceling reservation for resource {reservation.resource_url}, please wait")
-        cancel_reservation(url=reservation.reservation_url, auth_token=reservation.auth_token)
+        cancel_reservation(url=reservation.reservation_url, auth_token=reservation.auth_token,
+                           disable_validation=config.disable_validation)
 
     exit(error_counter)
 
