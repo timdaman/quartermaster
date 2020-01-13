@@ -40,7 +40,7 @@ class Device(object):
     def __init__(self, conf: Dict):
         self.conf = conf
         self.name = conf['name']
-        loaded_drivers = {driver.__name__: driver for driver in driver.LocalDriver.__subclasses__()}
+        loaded_drivers = {driver_class.__name__: driver_class for driver_class in driver.LocalDriver.__subclasses__()}
         if conf['driver'] in loaded_drivers:
             self.driver = loaded_drivers[conf['driver']](conf=conf)
         else:

@@ -7,7 +7,7 @@ from typing import List
 from .LocalDriver import LocalDriver
 
 
-class Usbip(LocalDriver):
+class UsbipOverSSH(LocalDriver):
     NO_REMOTE_DEVICES = b'usbip: info: no exportable devices found on '
 
     def __init__(self, conf):

@@ -3,7 +3,7 @@
 # from pathlib import Path
 
 from .LocalDriver import LocalDriver
-from .Usbip import Usbip
+from .UsbipOverSSH import UsbipOverSSH
 from .VirtualHereOverSSH import VirtualHereOverSSH
 # 
 # for mod in pkgutil.iter_modules('.'):

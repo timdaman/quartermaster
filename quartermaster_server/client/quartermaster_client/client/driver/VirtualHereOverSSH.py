@@ -9,7 +9,7 @@ from typing import Optional, List
 from .LocalDriver import LocalDriver
 
 
-class VirtualHere(LocalDriver):
+class VirtualHereOverSSH(LocalDriver):
     OK_MATCHER = re.compile("^OK$", flags=re.MULTILINE)
     LINUX_CLIENT_NAME = f"vhclient{platform.machine()}"
 
@@ -56,7 +56,7 @@ class VirtualHere(LocalDriver):
     def find_vh(self) -> str:
         target_platform = platform.system().lower()
         if target_platform in ('darwin', 'mac', 'macos', 'macosx'):
-            return VirtualHere.mac_find_vh()
+            return VirtualHereOverSSH.mac_find_vh()
         elif target_platform == 'linux':
             return self.linux_find_vh()
         else:
@@ -74,7 +74,7 @@ class VirtualHere(LocalDriver):
                 time.sleep(2)  # Give client service some time to start
             except subprocess.CalledProcessError:
                 raise LocalDriver.CommandError("Looks like VirtualHere might not be installed or runnable")
-            vh_path = VirtualHere.mac_find_vh()
+            vh_path = VirtualHereOverSSH.mac_find_vh()
 
         if vh_path is None:
             # Start if needed and get path
@@ -84,7 +84,7 @@ class VirtualHere(LocalDriver):
                 time.sleep(2)  # Give client service some time to start
             except subprocess.CalledProcessError:
                 raise LocalDriver.CommandError("Looks like VirtualHere might not be installed or runnable")
-            vh_path = VirtualHere.mac_find_vh()
+            vh_path = VirtualHereOverSSH.mac_find_vh()
         return [vh_path]
 
     def setup_linux_client(self):
