@@ -40,7 +40,7 @@ services:
       - internal
 
   frontend:
-    image: ${docker_registry-}frontend:${version:-UNSET}
+    image: ${docker_registry:-}frontend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-frontend
       context: .

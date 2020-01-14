@@ -5,8 +5,9 @@ RUN pip install pipenv
 # based on suggestions from here. https://www.python-ldap.org/en/latest/installing.html
 RUN apt update && apt install -y python3.7-dev libldap2-dev libsasl2-dev
 
-COPY Pipfile.lock Pipfile /
+COPY Pipfile.lock Pipfile local_requirements.txt /
 RUN pipenv install --system
+RUN pip install -r /local_requirements.txt
 
 WORKDIR /quartermaster
 COPY quartermaster_server /quartermaster
