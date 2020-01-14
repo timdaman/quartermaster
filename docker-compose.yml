@@ -1,6 +1,7 @@
 version: "3"
 services:
   backend:
+    image: ${docker_registry-}backend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-backend
       context: .
@@ -9,15 +10,14 @@ services:
     ports:
       - 8001:8000
     volumes:
-      - ./quartermaster_server/quartermaster/settings/north_docker_settings.py:/quartermaster/quartermaster/settings/north_docker_settings.py
-      - ./ssh_private_key:/ssh_private_key:ro
-      - ./config.ini:/config.ini:ro
+      - ${SETTINGS_DIR:-./quartermaster_server/quartermaster/settings/}:/quartermaster/quartermaster/settings/:ro
     environment:
-      - DJANGO_SETTINGS_MODULE=quartermaster.settings.north_docker_settings
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-quartermaster.settings.example_settings}
     networks:
       - internal
 
   tasks:
+    image: ${docker_registry-}tasks:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-backend
       context: .
@@ -26,13 +26,12 @@ services:
       - redis
       - db
     volumes:
-      - ./quartermaster_server/quartermaster/settings/north_docker_settings.py:/quartermaster/quartermaster/settings/north_docker_settings.py
-      - ./ssh_private_key:/ssh_private_key:ro
-      - ./config.ini:/config.ini:ro
+      - ${SETTINGS_DIR:-./quartermaster_server/quartermaster/settings/}:/quartermaster/quartermaster/settings/:ro
     environment:
-      - DJANGO_SETTINGS_MODULE=quartermaster.settings.north_docker_settings
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-quartermaster.settings.example_settings}
     networks:
       - internal
+
   redis:
     image: redis:5-alpine
     ports:
@@ -41,6 +40,7 @@ services:
       - internal
 
   frontend:
+    image: ${docker_registry-}frontend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-frontend
       context: .
@@ -62,9 +62,9 @@ services:
     ports:
       - 127.0.0.1:5432:5432
     environment:
-      POSTGRES_USER: quartermaster
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: quartermaster
+      POSTGRES_USER: ${POSTGRES_USER:-quartermaster}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-quartermaster}
     networks:
       - internal
 volumes:

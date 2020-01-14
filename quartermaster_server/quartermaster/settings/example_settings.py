@@ -26,14 +26,14 @@ INSTALLED_APPS.extend([
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'REPLAC_THIS',
+        'NAME': 'REPLACE_THIS',
         'USER': 'REPLACE_THIS',
         'PASSWORD': 'REPLACE_THIS',
         'HOST': 'REPLACE_THIS',
     }
 }
 
-HUEY['connection']['host'] = "localhost"
+HUEY['connection']['host'] = "redis"
 HUEY['consumer']['workers'] = 2
 
 RESERVATION_MAX_MINUTES = timedelta(minutes=10)
@@ -43,7 +43,11 @@ RESERVATION_CHECKIN_TIMEOUT_MINUTES = timedelta(minutes=5)
 SSH_USERNAME = 'REPLACE_THIS'
 SSH_PRIVATE_KEY = paramiko.Ed25519Key.from_private_key(StringIO(
     """-----BEGIN OPENSSH PRIVATE KEY-----
-REPLACE_THIS
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACBEwsJ2uZejpjzK4/aWeHgC7XFCC1RzfwC1pnq+K/QPhwAAAKCoPnpuqD56
+bgAAAAtzc2gtZWQyNTUxOQAAACBEwsJ2uZejpjzK4/aWeHgC7XFCC1RzfwC1pnq+K/QPhw
+AAAEBfU90mkx6CtUhIBc+d3JvXRN1idaETz+SeOhRv2mXXr0TCwna5l6OmPMrj9pZ4eALt
+cUILVHN/ALWmer4r9A+HAAAAGXRpbS5sYXVyZW5jZUBzcGYzLXRvcGF6LTEBAgME
 -----END OPENSSH PRIVATE KEY-----
 """))
 
