@@ -38,8 +38,6 @@ class ReservationView(View):
 
     def reservation_active_response(self) -> TemplateResponse:
         update_reservation(self.resource)
-        instructions = {platform: {'setup': set(), 'attach': []}
-                        for platform in settings.SUPPORTED_PLATFORMS}
 
         return TemplateResponse(request=self.request,
                                 template='reserve_resource.html',

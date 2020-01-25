@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='device',
             name='driver',
-            field=models.CharField(choices=[('UsbipOverSSH', 'UsbipOverSSH'), ('VirtualHere', 'VirtualHere')], max_length=100),
+            field=models.CharField(choices=[('UsbipOverSSH', 'UsbipOverSSH'), ('VirtualHereOverSSH', 'VirtualHereOverSSH')], max_length=100),
         ),
     ]

@@ -24,11 +24,7 @@ class ReservationSerializer(serializers.ModelSerializer):
     def get_devices(self, resource_pk):
         devices = []
         for device in self.instance.device_set.all():
-            if 'Usbip' in device.driver:
-                driver = 'Usbip'
-            else:
-                driver = device.driver
-            devices.append({**device.config, 'driver': driver, 'name': str(device)})
+            devices.append({**device.config, 'driver': device.driver, 'name': str(device)})
         return devices
 
 

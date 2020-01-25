@@ -1,11 +1,11 @@
 import logging
 import re
-from typing import Tuple
 
 import paramiko
 from django.conf import settings
 
 from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
+from quartermaster.ssh_helper import ssh_command
 
 logger = logging.getLogger(__name__)
 
@@ -24,20 +24,6 @@ and example is this
 "bus_id": "1-11"
 }
 """
-
-
-def ssh_command(command: str, host: str) -> Tuple:
-    try:
-        client = paramiko.SSHClient()
-        # TODO: This is not great, perhaps record host keys in DB?
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
-        client.connect(host, username=settings.SSH_USERNAME, pkey=settings.SSH_PRIVATE_KEY)
-        stdin, stdout, stderr = client.exec_command(command=command)
-    except paramiko.SSHException as e:
-        logger.exception(f'Error: host={host}, command={command}')
-        raise e
-    return_code = stdout.channel.recv_exit_status()
-    return return_code, stdout, stderr
 
 
 class UsbipOverSSH(AbstractShareableUsbDevice):

@@ -10,53 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import os
-from configparser import RawConfigParser
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-from datetime import timedelta
 from pathlib import Path
-from urllib.parse import urlparse
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Are we in a docker environment or not?
-IN_DOCKER = Path('/.dockerenv').exists()
-
-if IN_DOCKER:
-    CONFIG_FILE_PATH = Path('/config.ini')
-else:
-    CONFIG_FILE_PATH = Path(BASE_DIR) / '../config.ini'
-
-config_string = "[all]\n" + CONFIG_FILE_PATH.read_text()
-raw_config = RawConfigParser()
-raw_config.read_string(config_string)
-config_file = raw_config['all']
-
-
-def find_setting(name: str, default=str) -> str:
-    # Check environment
-    if name in os.environ:
-        return os.environ.get(name)
-    # Config file
-    if name in config_file:
-        return config_file[name]
-    if default:
-        return default
-    raise ValueError(f"Could not find value for {name}")
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = find_setting('SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-SERVER_BASE_URL = find_setting('SERVER_BASE_URL')
-parsed_server_base_url = urlparse(SERVER_BASE_URL)
-
-ALLOWED_HOSTS = ['backend', '127.0.0.1', 'localhost', parsed_server_base_url.netloc]
 
 # Application definition
 
@@ -67,18 +26,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'data',  # This is the core datastore that everything else hangs off of
     'huey.contrib.djhuey',  # Provides Task scheduling
     'rest_framework',  # Makes nice API
     'rest_framework.authtoken',  # Only needed if using clients that self authenticate such as in CI
     'bootstrap4',  # Styling for user GUI
+    'data',  # This is the core datastore that everything else hangs off of
     'gui',  # UI for user interactive interface
     'api',  # API, used to support client
     'client',  # Download link for client software
-    'Teamcity',  # Support for TeamCity CI servers
-    'UsbipOverSSH',  # Support for managing USB/IP resources over SSH
-    'VirtualHere'  # Support for managing VirtualHere resources over SSH
 ]
+
+# FIXME, detect installed drivers and display error is none
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -109,29 +67,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'quartermaster.wsgi.application'
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-if IN_DOCKER:
-    DB_FILE = Path('/data') / 'db.sqlite3'  # assume we are in Docker container
-else:
-    DB_FILE = Path(BASE_DIR) / '../db.sqlite3'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'quartermaster',
-        'USER': 'quartermaster',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': 5432,
-        'TEST': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:'
-        }
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -168,15 +103,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = Path(BASE_DIR) / '../../deploy/static'
 
-if IN_DOCKER:
-    REDIS_HOST = "redis"
-else:
-    REDIS_HOST = "localhost"
 HUEY = {
     'huey_class': 'huey.PriorityRedisHuey',  # Huey implementation to use.
     'connection': {
-        'host': REDIS_HOST,
+        'host': "localhost",
         'immediate': False
     },
     'consumer': {
@@ -187,9 +119,6 @@ HUEY = {
 
 LOGIN_REDIRECT_URL = 'gui:list_resources'
 LOGOUT_REDIRECT_URL = 'login'
-
-RESERVATION_MAX_MINUTES = timedelta(minutes=int(find_setting('RESERVATION_MAX_MINUTES')))
-RESERVATION_CHECKIN_TIMEOUT_MINUTES = timedelta(minutes=int(find_setting('RESERVATION_CHECKIN_TIMEOUT_MINUTES')))
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -204,10 +133,5 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"django_auth_ldap": {"level": "DEBUG", "handlers": ["console"]}},
 }
-
-STATIC_ROOT = Path(BASE_DIR) / '../deploy/static'
-
-STATIC_URL = '/static/'
-
-SUPPORTED_PLATFORMS = ('Linux', 'Windows', 'Mac')

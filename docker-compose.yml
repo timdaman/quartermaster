@@ -1,7 +1,7 @@
 version: "3"
 services:
   backend:
-    image: ${docker_registry}/quartermaster/backend:${version:-UNSET}
+    image: ${docker_registry-}backend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-backend
       context: .
@@ -10,23 +10,28 @@ services:
     ports:
       - 8001:8000
     volumes:
-      - ./ssh_private_key:/ssh_private_key:ro
-      - ./config.ini:/config.ini:ro
+      - ${SETTINGS_DIR:-./quartermaster_server/quartermaster/settings/}:/quartermaster/quartermaster/settings/:ro
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-quartermaster.settings.example_settings}
     networks:
       - internal
     restart: always
 
   tasks:
-    image: ${docker_registry}/quartermaster/backend:${version:-UNSET}
-    networks:
-      - internal
+    image: ${docker_registry-}tasks:${version:-UNSET}
+    build:
+      dockerfile: deploy/Dockerfile-backend
+      context: .
     entrypoint: [ "python", "./manage.py", "run_huey" ]
     depends_on:
       - redis
       - db
     volumes:
-      - ./ssh_private_key:/ssh_private_key:ro
-      - ./config.ini:/config.ini:ro
+      - ${SETTINGS_DIR:-./quartermaster_server/quartermaster/settings/}:/quartermaster/quartermaster/settings/:ro
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-quartermaster.settings.example_settings}
+    networks:
+      - internal
     restart: always
 
   redis:
@@ -38,7 +43,7 @@ services:
     restart: always
 
   frontend:
-    image: ${docker_registry}/quartermaster/frontend:${version:-UNSET}
+    image: ${docker_registry:-}frontend:${version:-UNSET}
     build:
       dockerfile: deploy/Dockerfile-frontend
       context: .
@@ -58,13 +63,12 @@ services:
     image: postgres:12.1
     volumes:
       - quartermaster_db:/var/lib/postgresql/data:rw
-      - ./tls_chain.crt:/tls_chain.crt:ro
     ports:
       - 127.0.0.1:5432:5432
     environment:
-      POSTGRES_USER: quartermaster
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: quartermaster
+      POSTGRES_USER: ${POSTGRES_USER:-quartermaster}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-quartermaster}
     networks:
       - internal
     restart: always

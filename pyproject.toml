@@ -13,8 +13,7 @@ django-bootstrap4 = "^1.1.1"
 redis = "^3.3.11"
 djangorestframework = "^3.11.0"
 psycopg2-binary = "^2.8.4"
-paramiko = "^2.7.1" # TODO: Move this to driver
-filelock = "^3.0.12"
+paramiko = "^2.7.1"
 coverage = "^5.0.1"
 
 

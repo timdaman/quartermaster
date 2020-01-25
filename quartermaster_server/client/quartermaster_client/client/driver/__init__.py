@@ -3,8 +3,8 @@
 # from pathlib import Path
 
 from .LocalDriver import LocalDriver
-from .Usbip import Usbip
-from .VirtualHere import VirtualHere
+from .UsbipOverSSH import UsbipOverSSH
+from .VirtualHereOverSSH import VirtualHereOverSSH
 # 
 # for mod in pkgutil.iter_modules('.'):
 #     print(mod)

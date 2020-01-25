@@ -9,7 +9,7 @@ from typing import Optional, List
 from .LocalDriver import LocalDriver
 
 
-class VirtualHere(LocalDriver):
+class VirtualHereOverSSH(LocalDriver):
     OK_MATCHER = re.compile("^OK$", flags=re.MULTILINE)
     LINUX_CLIENT_NAME = f"vhclient{platform.machine()}"
 
@@ -38,11 +38,14 @@ class VirtualHere(LocalDriver):
     @staticmethod
     def mac_find_vh() -> Optional[str]:
         try:
-            output = subprocess.check_output(('pgrep', '-lf', 'VirtualHere.app/Contents/MacOS/VirtualHere'),
+            app_name_fragment = 'VirtualHere.app/Contents/MacOS/VirtualHere'
+            output = subprocess.check_output(('pgrep', '-lf', app_name_fragment),
                                              encoding='utf-8')
-            # Find path in output, assume it looks like
+            # Find path in output, assume it looks like on the following
             # '18643 /Applications/VirtualHere.app/Contents/MacOS/VirtualHere'
-            return output.splitlines()[0].split(' ', maxsplit=1)[1]
+            # '1598 /Applications/VirtualHere.app/Contents/MacOS/VirtualHere --log=OSEventLog -n'
+            match = re.match(f"^\d+ (?P<cmd>.+{app_name_fragment})", output.splitlines()[0])
+            return match['cmd']
         except subprocess.CalledProcessError:
             # Assume process is not running
             return None
@@ -53,7 +56,7 @@ class VirtualHere(LocalDriver):
     def find_vh(self) -> str:
         target_platform = platform.system().lower()
         if target_platform in ('darwin', 'mac', 'macos', 'macosx'):
-            return VirtualHere.mac_find_vh()
+            return VirtualHereOverSSH.mac_find_vh()
         elif target_platform == 'linux':
             return self.linux_find_vh()
         else:
@@ -71,7 +74,7 @@ class VirtualHere(LocalDriver):
                 time.sleep(2)  # Give client service some time to start
             except subprocess.CalledProcessError:
                 raise LocalDriver.CommandError("Looks like VirtualHere might not be installed or runnable")
-            vh_path = VirtualHere.mac_find_vh()
+            vh_path = VirtualHereOverSSH.mac_find_vh()
 
         if vh_path is None:
             # Start if needed and get path
@@ -81,7 +84,7 @@ class VirtualHere(LocalDriver):
                 time.sleep(2)  # Give client service some time to start
             except subprocess.CalledProcessError:
                 raise LocalDriver.CommandError("Looks like VirtualHere might not be installed or runnable")
-            vh_path = VirtualHere.mac_find_vh()
+            vh_path = VirtualHereOverSSH.mac_find_vh()
         return [vh_path]
 
     def setup_linux_client(self):
