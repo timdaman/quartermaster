@@ -56,7 +56,7 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
                 f"Ran into problems connecting to {settings.SSH_USERNAME}@{self.host}: {e}")
         if return_code != 0:
             message = f'Error: host={self.host}, command={command}, rc={return_code}, ' \
-                      f'stdout={stdout.read()}, stderr={stderr.read()}'
+                      f'stdout={stdout}, stderr={stderr}'
             logger.error(message)
             raise self.DeviceCommandError(message)
         return return_code, stdout, stderr
@@ -65,14 +65,14 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
         command = "sudo usbip list -r localhost"
         return_code, stdout, stderr = self.ssh(command)
 
-        error_messages = stderr.read()
+        error_messages = stderr
         if return_code != 0 and self.NO_REMOTE_DEVICES not in error_messages:
             message = f'Error: host={self.host}, command={command}, rc={return_code}, ' \
-                      f'stdout={stdout.read()}, stderr={error_messages}'
+                      f'stdout={stdout}, stderr={error_messages}'
             logger.error(message)
             raise self.DeviceCommandError(message)
 
-        output: str = stdout.read().decode('ascii')
+        output: str = stdout
         # This takes this
         #  1-11: SiGma Micro : Keyboard TRACER Gamma Ivory (1c4f:0002)
         # and makes this

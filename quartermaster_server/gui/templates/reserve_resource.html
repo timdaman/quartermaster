@@ -24,6 +24,6 @@
         {{ server_base_url }}{% url 'api:show_reservation_with_password' resource_pk=resource.pk resource_password=resource.use_password %}
     </code></p>
     {% load static %}
-    <a href="{% url 'client:download_client' %}">Download quartermaster client</a>
+    <a href="{{ server_base_url }}{% url 'client:download_client' %}">Download quartermaster client</a>
 
 {% endblock %}
