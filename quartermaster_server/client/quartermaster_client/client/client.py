@@ -115,7 +115,7 @@ async def get_resource_status(url: str, config: Namespace, teardown: asyncio.Eve
         for _ in range(0, REFRESH_RETRY_LIMIT):
             try:
                 refresh_successful = refresh_reservation(url, config.auth_token, config.disable_validation)
-                break
+                break # The retry loop
             except Exception:
                 await asyncio.sleep(REFRESH_RETRY_SLEEP)
         else:

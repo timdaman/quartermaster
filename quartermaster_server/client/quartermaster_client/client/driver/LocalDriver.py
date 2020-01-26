@@ -1,3 +1,6 @@
+from typing import Optional, Union, List
+
+
 class LocalDriver(object):
     class DriverError(Exception):
         pass
@@ -6,7 +9,17 @@ class LocalDriver(object):
         pass
 
     class CommandError(DriverError):
-        pass
+
+        def __init__(self, message: str,
+                     rc: Optional[int] = None,
+                     stdout: bytes = b'',
+                     stderr: bytes = b'',
+                     command: Optional[Union[List[str], str]] = None):
+            self.message = message
+            self.rc = rc
+            self.stdout = stdout
+            self.stderr = stderr
+            self.command = command
 
     class UnsupportedPlatform(DriverError):
         pass

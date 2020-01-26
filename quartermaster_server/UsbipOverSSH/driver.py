@@ -29,6 +29,8 @@ and example is this
 class UsbipOverSSH(AbstractShareableUsbDevice):
     NO_REMOTE_DEVICES = b'usbip: info: no exportable devices found on '
     CONFIGURATION_KEYS = ("host", "bus_id")
+    USBIPD_NOT_RUNNING = 'error: could not connect to localhost:3240'
+    MISSING_KERNEL_MODULE = 'error: unable to bind device on '
 
     @property
     def host(self):
@@ -41,6 +43,15 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
             raise self.DeviceConnectionError(
                 f"Ran into problems connecting to {settings.SSH_USERNAME}@{self.host}: {e}")
         if return_code != 0:
+            if self.USBIPD_NOT_RUNNING in stderr:
+                message = f"usbipd is not running on {self.host}"
+                logger.error(message)
+                raise self.DeviceCommandError(message)
+            elif self.MISSING_KERNEL_MODULE in stderr:
+                message = f"Kernel modules might not be loaded on {self.host}, try `sudo modprobe usbip_host`"
+                logger.error(message)
+                raise self.DeviceCommandError(message)
+
             message = f'Error: host={self.host}, command={command}, rc={return_code}, ' \
                       f'stdout={stdout}, stderr={stderr}'
             logger.error(message)
@@ -74,12 +85,14 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
         return self.get_share_state()
 
     def start_sharing(self) -> None:
-        command = f"sudo usbip bind -b {self.config['bus_id']}"
-        self.ssh(command)
+        if not self.get_share_state():
+            command = f"sudo usbip bind -b {self.config['bus_id']}"
+            self.ssh(command)
 
     def stop_sharing(self) -> None:
-        command = f"sudo usbip unbind -b {self.config['bus_id']}"
-        self.ssh(command)
+        if self.get_share_state():
+            command = f"sudo usbip unbind -b {self.config['bus_id']}"
+            self.ssh(command)
 
     # This Driver does not support authentication
     # def password_string(self):
