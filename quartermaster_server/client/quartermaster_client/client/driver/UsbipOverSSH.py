@@ -36,7 +36,7 @@ class UsbipOverSSH(LocalDriver):
         return stdout.decode('ascii')
 
     async def connected(self):
-        args = ['list', '-r', 'localhost']
+        args = ['list', '-r', self.conf['host']]
         output = await self.run_usbip(arguments=args)
 
         # This takes this
