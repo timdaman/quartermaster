@@ -12,6 +12,7 @@ logger = logging.getLogger()
 class UsbipOverSSH(LocalDriver):
     # FIXME: Look for the following in output and flash as unbound device
     REMOTE_DEVICE_MISSING = b'usbip: error: recv op_common\nusbip: error: query'
+
     # FIXME: Probably should run `usbip list -r` before trying to attach so I can handle missing devices better
 
     def __init__(self, conf):
@@ -27,7 +28,8 @@ class UsbipOverSSH(LocalDriver):
 
     async def run_usbip(self, arguments: List[str]):
         command = ['sudo', self.usbip, *arguments]
-        logger.debug(" ".join(command))
+        command_str = " ".join(command)
+        logger.debug(command_str)
         proc = await asyncio.create_subprocess_exec(
             *command,
             stdout=asyncio.subprocess.PIPE,
@@ -37,7 +39,7 @@ class UsbipOverSSH(LocalDriver):
 
         if proc.returncode != 0:
             raise self.CommandError(
-                f'Error: command={arguments}, rc={proc.returncode}, stdout={stdout}, stderr={stderr}',
+                f'Error: command={command_str}, rc={proc.returncode}, stdout={stdout}, stderr={stderr}',
                 rc=proc.returncode, stdout=stdout, stderr=stderr, command=arguments
             )
 
@@ -49,8 +51,12 @@ class UsbipOverSSH(LocalDriver):
 
     async def connect(self) -> None:
         args = ['attach', '-r', self.conf['host'], '-b', self.conf['bus_id']]
-
-        await self.run_usbip(args)
+        try:
+            await self.run_usbip(args)
+        except self.CommandError as e:
+            print(f"Error attaching {self.conf['host']} {self.conf['bus_id']}, "
+                  f"rc={e.rc}, stdout={e.stdout}, stderr={e.stderr}")
+            raise e
 
     async def get_port(self) -> Optional[int]:
         """# usbip port
@@ -62,11 +68,14 @@ class UsbipOverSSH(LocalDriver):
                            -> remote bus/dev 001/008"""
         args = ['port']
         output = await self.run_usbip(args)
-        header=True
+        header = True
         ports = output.split('\nPort ')[1:]  # Skip the first group which is just the header
+        logger.debug(ports)
         for port_option in ports:
             if f"/{self.conf['bus_id']}\n" in port_option:  # FIXME: This should try to match host too
-                return port_option.split(':')[0]
+                port = port_option.split(':')[0]
+                logger.debug(f"Found {self.conf['bus_id']} on port {port}")
+                return port
         else:
             return None
 

@@ -1,5 +1,4 @@
 .idea
-config.ini
 test_key*
 tls*
 ssh_private_key
@@ -11,3 +10,4 @@ __pycache__
 **/.DS_Store
 quartermaster_server/quartermaster/settings.py
 !quartermaster_server/quartermaster/settings/example_settings.py
+.env
