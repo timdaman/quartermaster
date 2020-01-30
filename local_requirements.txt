@@ -1,1 +1,1 @@
-# Put python packages needed for you local configuration here
+# Put python packages needed for your local configuration here

@@ -19,5 +19,5 @@ from client.views import download_client
 
 app_name = 'client'
 urlpatterns = [
-    path('download', download_client, name='download_client'),
+    path('quartermaster_client', download_client, name='download_client'),
 ]

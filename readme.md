@@ -56,3 +56,18 @@ A `client` which attached a remote USB device to use it
 
 1) Using the web service. Using the GUI users can log-in and reserve a resource for their use. They will get a special
 url for the resource they reserved and by using the qua
+
+
+# How to deploy quartermaster
+
+    git clone https://github.com/timdaman/quartermaster.git
+    cd quartermaster
+    deploy/build_docker_images.sh
+    # Add you own certs or use the command below to generate self signed test certs
+    # openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout tls.key  -out tls_chain.crt -subj "/C=CA/ST=ON/L=Kitchener/O=Ops/CN=quartermaster.example.com"
+    # If you forgot to generate your certificates before starting services delete the tls.key and tls_chain.crt directories Docker created and run `docker-compose rm frontend` to recover  
+    docker-compose up -d
+
+# How to develop plugins
+## Add a driver
+## Add an integration

@@ -30,9 +30,12 @@ error_counter = 0
 
 START_TIMESTAMP = time.time()
 
+
 def formated_print(message: str):
     duration = time.time() - START_TIMESTAMP
     print(f"{duration:.1f} {message}")
+
+
 #
 #  ___  _____   _____ ___ ___ ___
 # |   \| __\ \ / /_ _/ __| __/ __|
@@ -90,7 +93,6 @@ async def manage_devices(devices: List[Device], polling_interval: int):
 
     while True:
         await asyncio.sleep(polling_interval)
-        formated_print("Checking connections")
         for device in devices:
             await device.connect()  # connect() is lazy, if device is connected it won't do anything
 
@@ -120,7 +122,7 @@ async def get_resource_status(url: str, config: Namespace, teardown: asyncio.Eve
         for _ in range(0, REFRESH_RETRY_LIMIT):
             try:
                 refresh_successful = refresh_reservation(url, config.auth_token, config.disable_validation)
-                break # The retry loop
+                break  # The retry loop
             except Exception:
                 await asyncio.sleep(REFRESH_RETRY_SLEEP)
         else:
@@ -384,7 +386,16 @@ def main(args: List[str]):
                                                     disable_validation=config.disable_validation)
         formated_print(f"Reservation active for resource {reservation.resource_url}")
         preflight_checks(reservation)
-        asyncio.run(start_tasks(reservation, config), debug=config.debug)
+        
+        if sys.version_info.major == 3 and sys.version_info.minor < 7:
+            loop = asyncio.get_event_loop()
+            try:
+                loop.run_until_complete(start_tasks(reservation, config))
+            finally:
+                loop.close()
+        else:
+            asyncio.run(start_tasks(reservation, config), debug=config.debug)
+        
         formated_print("Cleanup done")
     except Exception as e:
         formated_print(e)

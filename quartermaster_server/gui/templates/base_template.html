@@ -18,10 +18,21 @@
         </ul>
         <ul class="navbar-nav mr-auto">
             {% if user.is_authenticated %}
+                {% if  user.is_staff %}
+                    <li class="nav-item active">
+                        <a class="nav-link px-2" href="{% url 'admin:app_list' app_label='data' %}">
+                            Edit configuration
+                            <span class="sr-only">(edit configuration)</span>
+                        </a>
+                    </li>
+                {% endif %}
+
                 <li class="nav-item active">
                     <span class="navbar-text">Logged in as {{ user.username }}, </span>
-                    <a class="navbar-text" href="{% url 'logout' %}">click here to logout<span
-                            class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'logout' %}">logout <span
+                            class="sr-only">(logout)</span></a>
                 </li>
             {% endif %}
 
