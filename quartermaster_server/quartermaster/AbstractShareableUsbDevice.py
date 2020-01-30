@@ -17,7 +17,9 @@ class AbstractShareableUsbDevice(object):
         """
         Generic error when trying to interact with device
         """
-        pass
+
+        def __init__(self, message: str = None):
+            self.message = message
 
     class DeviceConnectionError(DeviceError):
         """
