@@ -31,7 +31,7 @@ error_counter = 0
 START_TIMESTAMP = time.time()
 
 
-def formated_print(message: str):
+def formatted_print(message: str):
     duration = time.time() - START_TIMESTAMP
     print(f"{duration:.1f} {message}")
 
@@ -60,16 +60,16 @@ class Device(object):
 
     async def connect(self):
         if not await self.connected():
-            formated_print(f"Connecting {self.name}")
+            formatted_print(f"Connecting {self.name}")
             await self.driver.connect()
             self.connect_complete = True
-            formated_print(f"Done connecting {self.name}")
+            formatted_print(f"Done connecting {self.name}")
 
     async def disconnect(self):
         if await self.connected():
-            formated_print(f"Disconnecting {self.name}")
+            formatted_print(f"Disconnecting {self.name}")
             await self.driver.disconnect()
-            formated_print(f"Done disconnecting {self.name}")
+            formatted_print(f"Done disconnecting {self.name}")
 
     async def connected(self):
         return await self.driver.connected()
@@ -89,7 +89,7 @@ class Reservation(NamedTuple):
 async def manage_devices(devices: List[Device], polling_interval: int):
     for device in devices:
         await device.async_init()
-    formated_print("Setup complete, keep this terminal open to keep your reservation active")
+    formatted_print("Setup complete, keep this terminal open to keep your reservation active")
 
     while True:
         await asyncio.sleep(polling_interval)
@@ -105,14 +105,14 @@ async def disconnect_devices(devices: List[Device]):
     global error_counter
     for device in devices:
         if device.connect_complete:
-            formated_print(f"Disconnecting {device.name}")
+            formatted_print(f"Disconnecting {device.name}")
             try:
                 await device.disconnect()
             except Exception as e:  # Swallowing exception so disconnection failures don't impact each other
                 error_counter += 1
-                formated_print(f"Got the following exception when trying to disconnect {device.name}: {e}")
+                formatted_print(f"Got the following exception when trying to disconnect {device.name}: {e}")
         else:
-            formated_print(f"Skipping disconnecting {device.name} as it never completed connecting")
+            formatted_print(f"Skipping disconnecting {device.name} as it never completed connecting")
 
 
 async def get_resource_status(url: str, config: Namespace, teardown: asyncio.Event):
@@ -133,7 +133,7 @@ async def get_resource_status(url: str, config: Namespace, teardown: asyncio.Eve
             await asyncio.sleep(config.reservation_polling)
             continue
         else:
-            formated_print("Reservation expired, triggering teardown")
+            formatted_print("Reservation expired, triggering teardown")
             teardown.set()
 
 
@@ -147,7 +147,7 @@ def preflight_checks(reservation: Reservation):
         driver = device.conf['driver']
         if driver in drivers_checked:
             continue
-        formated_print(f"Preflight checking {driver}")
+        formatted_print(f"Preflight checking {driver}")
         device.driver.preflight_check()
         drivers_checked.add(driver)
 
@@ -245,13 +245,13 @@ def refresh_reservation(url: str, auth_token: Optional[str] = None, disable_vali
 
 
 def cancel_reservation(url: str, auth_token: Optional[str] = None, disable_validation=False) -> bool:
-    formated_print(f"Canceling reservation for resource {url}")
+    formatted_print(f"Canceling reservation for resource {url}")
     http_code, content, _ = quartermaster_request(url=url,
                                                   token=auth_token,
                                                   method='DELETE',
                                                   disable_validation=disable_validation)
     if http_code == 204:
-        formated_print("Reservation canceled successfully")
+        formatted_print("Reservation canceled successfully")
         return True
     raise ConnectionError(f"Unexpected response when canceling reservation, HTTP CODE={http_code}, CONTENT={content}")
 
@@ -265,7 +265,7 @@ async def process_command(reader, writer, teardown: asyncio.Event):
         logger.debug(f"Command received, {data}")
         if data.startswith(TEARDOWN_COMMAND + b"\r") or data.startswith(TEARDOWN_COMMAND + b"\n"):
             writer.write(TEARDOWN_ACK)
-            formated_print(TEARDOWN_ACK.decode('utf-8'))
+            formatted_print(TEARDOWN_ACK.decode('utf-8'))
             teardown.set()
             await writer.drain()
             writer.close()
@@ -282,7 +282,7 @@ async def wait_for_commands(config: Namespace, teardown: asyncio.Event):
                 logger.debug(f"Listening on {config.listen_ip}:{config.listen_port} for commands")
                 await server.serve_forever()
         except Exception as e:
-            formated_print(f"Exception when trying to to start command listener: {e}")
+            formatted_print(f"Exception when trying to to start command listener: {e}")
             teardown.set()
 
 
@@ -291,11 +291,11 @@ def initiate_teardown(config: Namespace):
         s.connect((config.listen_ip, config.listen_port))
         s.sendall(b'teardown\r')
         data = s.recv(100)
-    formated_print(data.decode('utf-8'))
+    formatted_print(data.decode('utf-8'))
     if data == TEARDOWN_ACK:
         exit(0)
     else:
-        formated_print(f"Unexpected response from client at {config.listen_ip}:{config.listen_port}")
+        formatted_print(f"Unexpected response from client at {config.listen_ip}:{config.listen_port}")
         exit(1)
 
 
@@ -384,34 +384,27 @@ def main(args: List[str]):
                                                     auth_token=config.auth_token,
                                                     message=config.reservation_message,
                                                     disable_validation=config.disable_validation)
-        formated_print(f"Reservation active for resource {reservation.resource_url}")
+        formatted_print(f"Reservation active for resource {reservation.resource_url}")
         preflight_checks(reservation)
-        
-        if sys.version_info.major == 3 and sys.version_info.minor < 7:
-            loop = asyncio.get_event_loop()
-            try:
-                loop.run_until_complete(start_tasks(reservation, config))
-            finally:
-                loop.close()
-        else:
-            asyncio.run(start_tasks(reservation, config), debug=config.debug)
-        
-        formated_print("Cleanup done")
+
+        asyncio.run(start_tasks(reservation, config), debug=config.debug)
+
+        formatted_print("Cleanup done")
     except Exception as e:
-        formated_print(e)
+        formatted_print(str(e))
         if reservation is not None:
             try:
                 cancel_reservation(url=reservation.reservation_url, auth_token=reservation.auth_token,
                                    disable_validation=config.disable_validation)
             except Exception as ee:
-                formated_print(f"We got an exception while trying to cancel our reservation: {ee}")
+                formatted_print(f"We got an exception while trying to cancel our reservation: {ee}")
 
         if config.debug:  # So we get a stack traces
             raise e
         exit(1)
 
     if reservation is not None:
-        formated_print(f"Canceling reservation for resource {reservation.resource_url}, please wait")
+        formatted_print(f"Canceling reservation for resource {reservation.resource_url}, please wait")
         cancel_reservation(url=reservation.reservation_url, auth_token=reservation.auth_token,
                            disable_validation=config.disable_validation)
 
