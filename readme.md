@@ -8,7 +8,7 @@ Additionally it integrates with CI systems to supply hardware to jobs
 stuck in queue. Support is in place for TeamCity but supporting other
 CI systems should be fairly simple.
 
-# Why was Qaurtermaster built?
+# Why was Quartermaster built?
 
 Usually with USB devices the device has to physically attached to computer. 
 For devices that are rare, expensive, or are needed many places this can
@@ -58,7 +58,7 @@ A `client` which attached a remote USB device to use it
 url for the resource they reserved and by using the qua
 
 
-# How to deploy quartermaster
+# How to deploy Quartermaster
 
     git clone https://github.com/timdaman/quartermaster.git
     cd quartermaster
