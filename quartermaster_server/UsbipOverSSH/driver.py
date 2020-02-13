@@ -31,6 +31,7 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
     CONFIGURATION_KEYS = ("host", "bus_id")
     USBIPD_NOT_RUNNING = 'error: could not connect to localhost:3240'
     MISSING_KERNEL_MODULE = 'error: unable to bind device on '
+    USBIP_DRIVER_PATH = '/sys/bus/usb/drivers/usbip-host'
 
     @property
     def host(self):
@@ -59,7 +60,7 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
         return return_code, stdout, stderr
 
     def get_share_state(self) -> bool:
-        command = "sudo usbip list -r localhost"
+        command = f"test -d /sys/bus/usb/drivers/usbip-host/{self.config['bus_id']} || echo  missing"
         return_code, stdout, stderr = self.ssh(command)
 
         error_messages = stderr
@@ -70,16 +71,8 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
             raise self.DeviceCommandError(message)
 
         output: str = stdout
-        # This takes this
-        #  1-11: SiGma Micro : Keyboard TRACER Gamma Ivory (1c4f:0002)
-        # and makes this
-        #  1-11
-        device_lines = r'^ +\d+-[0-9.]+: '
-        available = [line[:line.find(':')].replace(' ', '')
-                     for line in output.splitlines()
-                     if re.match(device_lines, line)]
 
-        return self.config['bus_id'] in available
+        return 'missing' not in output 
 
     def get_online_state(self) -> bool:
         return self.get_share_state()

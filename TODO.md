@@ -10,6 +10,7 @@ Update jobs to have pre and post scripts for sharing and unsharing
   Agent side or server side
   Add toggle to enable/disable script execution
 
+Add client api for retrieving reservation record
 
 Resources for USB power switching
   https://acroname.com/store/s79-usbhub-3p
@@ -20,4 +21,3 @@ Resources for USB power switching
 
    
 Update `RESERVATION_MAX_MINUTES`, store the expiration timeline in the DB and display to the user in GUI and CLIENT
-listener:
