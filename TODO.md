@@ -19,3 +19,5 @@ Resources for USB power switching
   https://www.smartspate.com/how-to-convert-a-basic-usb-hub-into-driven-one/
 
    
+Update `RESERVATION_MAX_MINUTES`, store the expiration timeline in the DB and display to the user in GUI and CLIENT
+listener:
