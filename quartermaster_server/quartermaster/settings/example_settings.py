@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import paramiko
 from io import StringIO
 
-from .base import *
+from ..base_settings import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'REPLACE_THIS'

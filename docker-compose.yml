@@ -27,9 +27,9 @@ services:
       - redis
       - db
     volumes:
-      - ${SETTINGS_DIR:-./quartermaster_server/quartermaster/settings/}:/quartermaster/quartermaster/settings/:ro
+      - ${SETTINGS_FILE:-./quartermaster_server/quartermaster/settings/example_settings.py}:/quartermaster/quartermaster/settings/settings.py:ro
     environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-quartermaster.settings.example_settings}
+      -DJANGO_SETTINGS_MODULE=quartermaster.settings.settings
     networks:
       - internal
     restart: always
@@ -53,8 +53,8 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./tls.key:/tls.key:ro
-      - ./tls_chain.crt:/tls_chain.crt:ro
+      - ${TLS_KEY-./tls.key}:/tls.key:ro
+      - ${TLS_CHAIN-./tls_chain.crt}:/tls_chain.crt:ro
     networks:
       - internal
     restart: always
@@ -63,8 +63,8 @@ services:
     image: postgres:12.1
     volumes:
       - quartermaster_db:/var/lib/postgresql/data:rw
-    ports:
-      - 127.0.0.1:5432:5432
+#    ports:
+#      - 127.0.0.1:5432:5432
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-quartermaster}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
