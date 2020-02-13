@@ -10,9 +10,9 @@ services:
     ports:
       - 8001:8000
     volumes:
-      - ${SETTINGS_DIR:-./quartermaster_server/quartermaster/settings/}:/quartermaster/quartermaster/settings/:ro
+      - ${SETTINGS_FILE:-./quartermaster_server/quartermaster/settings/example_settings.py}:/quartermaster/quartermaster/settings/settings.py:ro
     environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-quartermaster.settings.example_settings}
+      - DJANGO_SETTINGS_MODULE=quartermaster.settings.settings
     networks:
       - internal
     restart: always
