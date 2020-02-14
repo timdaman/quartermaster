@@ -26,7 +26,7 @@ and example is this
 
 
 class UsbipOverSSH(AbstractShareableUsbDevice):
-    NO_REMOTE_DEVICES = b'usbip: info: no exportable devices found on '
+    NO_REMOTE_DEVICES = 'usbip: info: no exportable devices found on '
     CONFIGURATION_KEYS = ("host", "bus_id")
     USBIPD_NOT_RUNNING = 'error: could not connect to localhost:3240'
     MISSING_KERNEL_MODULE = 'error: unable to bind device on '
@@ -62,7 +62,7 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
         command = f"test -d /sys/bus/usb/drivers/usbip-host/{self.config['bus_id']} || echo  missing"
         return_code, stdout, stderr = self.ssh(command)
 
-        if return_code != 0 and self.NO_REMOTE_DEVICES not in error_messages:
+        if return_code != 0 and self.NO_REMOTE_DEVICES not in stderr:
             message = f'Error: host={self.host}, command={command}, rc={return_code}, ' \
                       f'stdout={stdout}, stderr={stderr}'
             logger.error(message)

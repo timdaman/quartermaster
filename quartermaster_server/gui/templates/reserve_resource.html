@@ -12,15 +12,16 @@
         </form>
     </div>
 
+    <h6>
+        <p class="font-weight-bold">
+            This page must be open or client running to keep this reservation active
+        </p>
 
-    <div class="alert alert-danger" role="alert">
-        This page must be open or client running to keep this reservation active
-    </div>
-
-    <h6>To use run the Quartermaster client with the following command</h6>
+        To use run the Quartermaster client with the following command
+    </h6>
 
     <p><code>
-        quartermaster_client
+        python3.7 quartermaster_client
         {{ server_base_url }}{% url 'api:show_reservation_with_password' resource_pk=resource.pk resource_password=resource.use_password %}
     </code></p>
     {% load static %}

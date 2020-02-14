@@ -7,7 +7,7 @@ import pytest
 from UsbipOverSSH import UsbipOverSSH
 
 sample_bus_id = '1-11'
-sample_host = 'exmaple.com'
+sample_host = 'example.com'
 
 
 @pytest.fixture()
@@ -35,17 +35,17 @@ def sample_ssh_output(sample_list_stdout, blank_bytes) -> Tuple[int, BytesIO, By
 
 
 @pytest.mark.django_db
-def test_device_is_shared(sample_ssh_output, sample_shared_device):
+def test_device_is_shared(blank_bytes, sample_shared_device):
     with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = sample_ssh_output
+        ssh_command.return_value = 0, '', ''
         driver = sample_shared_device.get_driver()
         assert True == driver.is_shared()
 
 
 @pytest.mark.django_db
-def test_device_is_not_shared(sample_ssh_output, sample_unshared_device):
+def test_device_is_not_shared(blank_bytes, sample_unshared_device):
     with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = sample_ssh_output
+        ssh_command.return_value = 0, 'missing', ''
         driver = sample_unshared_device.get_driver()
         assert False == driver.is_shared()
 
@@ -104,7 +104,7 @@ def test_turn_off_devices_initial_on(sample_shared_device, blank_bytes):
         driver = sample_shared_device.get_driver()
 
         driver.unshare()
-        assert 1 == ssh_command.call_count
+        assert 2 == ssh_command.call_count
 
 
 @pytest.mark.django_db
@@ -117,7 +117,7 @@ def test_host(sample_shared_device):
 @pytest.mark.django_db
 def test_get_online_state_online(sample_shared_device, sample_ssh_output):
     with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = sample_ssh_output
+        ssh_command.return_value = 0, sample_ssh_output, ''
         driver = sample_shared_device.get_driver()
         assert True == driver.get_online_state()
 
@@ -142,6 +142,6 @@ def test_get_online_state_error(sample_unshared_device, blank_bytes):
 @pytest.mark.django_db
 def test_get_online_state_none(sample_unshared_device, blank_bytes):
     with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = (1, blank_bytes, BytesIO(initial_bytes=UsbipOverSSH.NO_REMOTE_DEVICES))
+        ssh_command.return_value = (0, '', UsbipOverSSH.NO_REMOTE_DEVICES)
         driver = sample_unshared_device.get_driver()
         assert False == driver.get_online_state()
