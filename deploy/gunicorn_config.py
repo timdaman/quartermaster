@@ -8,3 +8,4 @@ workers = os.environ.get("GUNICORN_WORKERS", DEFAULT_WORKERS)
 loglevel = 'info'
 errorlog = '-'
 accesslog = '-'
+capture_output = True

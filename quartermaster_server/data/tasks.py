@@ -51,7 +51,7 @@ def confirm_device_state():
 @lock_task('confirm_devices_are_online')
 def confirm_devices_are_online():
     for device in Device.everything.all():
-        device_driver: AbstractShareableUsbDevice = device.get_driver_obj()
+        device_driver: AbstractShareableUsbDevice = device.get_driver()
         try:
             device.online = device_driver.is_online()
             device.save()

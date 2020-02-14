@@ -1,5 +1,4 @@
 import logging
-import re
 
 import paramiko
 from django.conf import settings
@@ -69,10 +68,19 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
             logger.error(message)
             raise self.DeviceCommandError(message)
 
-        return not 'missing' in stdout 
+        return 'missing' not in stdout
 
     def get_online_state(self) -> bool:
-        return self.get_share_state()
+        command = "usbip list -l"
+        return_code, stdout, stderr = self.ssh(command)
+
+        if return_code != 0:
+            message = f'Error: host={self.host}, command={command}, rc={return_code}, ' \
+                      f'stdout={stdout}, stderr={stderr}'
+            logger.error(message)
+            raise self.DeviceCommandError(message)
+
+        return f"- busid {self.config['bus_id']} " in stdout
 
     def start_sharing(self) -> None:
         if not self.get_share_state():
