@@ -63,16 +63,13 @@ class UsbipOverSSH(AbstractShareableUsbDevice):
         command = f"test -d /sys/bus/usb/drivers/usbip-host/{self.config['bus_id']} || echo  missing"
         return_code, stdout, stderr = self.ssh(command)
 
-        error_messages = stderr
         if return_code != 0 and self.NO_REMOTE_DEVICES not in error_messages:
             message = f'Error: host={self.host}, command={command}, rc={return_code}, ' \
-                      f'stdout={stdout}, stderr={error_messages}'
+                      f'stdout={stdout}, stderr={stderr}'
             logger.error(message)
             raise self.DeviceCommandError(message)
 
-        output: str = stdout
-
-        return 'missing' not in output 
+        return not 'missing' in stdout 
 
     def get_online_state(self) -> bool:
         return self.get_share_state()
