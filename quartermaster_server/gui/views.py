@@ -66,7 +66,6 @@ class ReservationView(View):
     def delete(self, request, resource_pk: str):
         if request.user == self.resource.user:
             release_reservation(self.resource)
-            for_all_devices(self.resource.device_set.all(), 'unshare')
             return HttpResponseRedirect(reverse('gui:list_resources'))
         messages.error(request, f"The resource, {resource_pk},  was not released because it is not reserved by you")
         return HttpResponseRedirect(reverse('gui:list_resources'))
