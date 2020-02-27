@@ -13,11 +13,11 @@ if __package__ in settings.INSTALLED_APPS:
     @db_periodic_task(crontab(minute='*/15'))
     @lock_task('check_device_nicknames')
     def check_device_nicknames():
-        for device in Device.objects.filter(driver=VirtualHere.__name__):
-            device_driver: VirtualHere = device.get_driver_obj()
+        for device in Device.objects.filter(driver=VirtualHereOverSSH.__name__):
+            device_driver: VirtualHereOverSSH = device.get_driver_obj()
             try:
                 nickname = device_driver.get_nickname()
-            except VirtualHere.DeviceError:
+            except VirtualHereOverSSH.DeviceError:
                 logger.exception(f"Error getting device nickname. Device={device}")
                 continue
 
