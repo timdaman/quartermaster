@@ -16,8 +16,9 @@ def ssh_command(command: str, host: str) -> Tuple[int, str, str]:
         client = paramiko.SSHClient()
         # TODO: This is not great, perhaps record host keys in DB?
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
-        client.connect(host, username=settings.SSH_USERNAME, pkey=settings.SSH_PRIVATE_KEY)
-        stdin, stdout, stderr = client.exec_command(command=command)
+        client.connect(host, username=settings.SSH_USERNAME, pkey=settings.SSH_PRIVATE_KEY,
+                       timeout=settings.SSH_CONNECT_TIMEOUT)
+        stdin, stdout, stderr = client.exec_command(command=command, timeout=settings.SSH_EXEC_TIMEOUT)
         return_code = stdout.channel.recv_exit_status()
         stdout_str = stdout.read().decode('UTF-8')
         stderr_str = stderr.read().decode('UTF-8')

@@ -135,3 +135,6 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {"": {"level": "INFO", "handlers": ["console"]}}, # Catch-all
 }
+
+SSH_CONNECT_TIMEOUT = 1.0
+SSH_EXEC_TIMEOUT = 2.0
