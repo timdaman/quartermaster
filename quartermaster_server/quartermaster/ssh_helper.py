@@ -12,8 +12,9 @@ class QuartermasterSSHError(Exception):
 
 
 def ssh_command(command: str, host: str) -> Tuple[int, str, str]:
+
+    client = paramiko.SSHClient()
     try:
-        client = paramiko.SSHClient()
         # TODO: This is not great, perhaps record host keys in DB?
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
         client.connect(host, username=settings.SSH_USERNAME, pkey=settings.SSH_PRIVATE_KEY,
@@ -28,5 +29,7 @@ def ssh_command(command: str, host: str) -> Tuple[int, str, str]:
         logger.exception(f'Error: host={settings.SSH_USERNAME}@{host}, command={command}')
         raise QuartermasterSSHError(
             f"Ran into problems connecting to {settings.SSH_USERNAME}@{host}: {e}")
+    finally:
+        client.close()
 
     return return_code, stdout_str, stderr_str

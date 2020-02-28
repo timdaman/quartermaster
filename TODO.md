@@ -21,3 +21,8 @@ Resources for USB power switching
 
    
 Update `RESERVATION_MAX_MINUTES`, store the expiration timeline in the DB and display to the user in GUI and CLIENT
+
+Tasks to update device status are not scalable as they are done serially. Look ay making them async, or break them up into subtasks.
+    Move host information to separate table
+    Set up tasks to process hosts in parallel
+    Merge checks for share state and online state so only one connection is needed for both
