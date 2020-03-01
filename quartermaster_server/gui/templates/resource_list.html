@@ -15,9 +15,11 @@
                     </ul>
                 </details>
                 {% if resource.user == user %}
-                    <a href="{% url 'gui:view_reservation' resource_pk=resource.pk %}">See your reservation</a>
+                    Reservation expires at {{ resource.reservation_expiration }}
+                    <div><a href="{% url 'gui:view_reservation' resource_pk=resource.pk %}">See your reservation</a></div>
                 {% elif resource.user %}
                     <div>In use by {{ resource.user.username }} for {{ resource.used_for }}</div>
+                    <div>Reservation expires at {{ resource.reservation_expiration }}</div>
                 {% else %}
                     <form action="{% url 'gui:view_reservation' resource_pk=resource.pk %}" method="post">
                         {% csrf_token %}

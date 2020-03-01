@@ -40,7 +40,7 @@ class ReservationView(View):
         update_reservation(self.resource)
 
         return TemplateResponse(request=self.request,
-                                template='reserve_resource.html',
+                                template='resource_detail.html',
                                 context={"resource": self.resource,
                                          "server_base_url": settings.SERVER_BASE_URL})
 

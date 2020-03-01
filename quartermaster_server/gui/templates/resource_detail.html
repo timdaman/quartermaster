@@ -4,6 +4,7 @@
     <div><span style="font-weight: bold">Reserved by</span>: {{ resource.user.username }} for {{ resource.used_for }}
     </div>
     <div><span style="font-weight: bold">Reserved since</span>: {{ resource.last_reserved }}</div>
+    <div><span style="font-weight: bold">Reservation expires at</span>: {{ resource.reservation_expiration }}</div>
     <div>
         <form action="{% url 'gui:view_reservation' resource_pk=resource.pk %}" method="post">
             {% csrf_token %}
@@ -14,7 +15,7 @@
 
     <h6>
         <p class="font-weight-bold">
-            This page must be open or client running to keep this reservation active
+            This page must be open or client left running to keep this reservation active
         </p>
 
         To use run the Quartermaster client with the following command

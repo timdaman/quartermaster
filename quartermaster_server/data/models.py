@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from json import JSONDecodeError
 
 from django.conf import settings
@@ -67,6 +68,16 @@ class Resource(models.Model):
     @property
     def is_online(self) -> bool:
         return self.device_set.filter(online=False).count() == 0
+
+    # This is the time when the reservation expires when in_use() is True
+    @property
+    def reservation_expiration(self) -> datetime:
+        return self.last_reserved + settings.RESERVATION_MAX_MINUTES
+
+    # This is the time when the reservation expires due ot missing check-ins when in_use() is True
+    @property
+    def checkin_expiration(self) -> datetime:
+        return self.last_check_in + settings.RESERVATION_CHECKIN_TIMEOUT_MINUTES
 
 
 def loaded_drivers():

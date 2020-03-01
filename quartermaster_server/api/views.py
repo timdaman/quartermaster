@@ -16,7 +16,7 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Resource
-        fields = ['user', 'used_for', 'use_password', 'devices', 'reservation_url']
+        fields = ['user', 'used_for', 'use_password', 'devices', 'reservation_url', 'reservation_expiration']
 
     def get_reservation_url(self, resource_pk):
         return settings.SERVER_BASE_URL + reverse('api:show_reservation', kwargs={"resource_pk": self.instance.pk})
