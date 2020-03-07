@@ -36,4 +36,4 @@ for app in settings.INSTALLED_APPS:
     except:
         pass
     else:
-        urlpatterns.insert(0,path(f"^{app_shortname}/", include(f"{app_shortname}.urls")))
+        urlpatterns.insert(0,path(f"{app_shortname}/", include(f"{app_shortname}.urls")))
