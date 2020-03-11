@@ -155,14 +155,15 @@ class Device(models.Model, ConfigJSON):
     """
     Device represents a single USB resource that is being made available from a remote host
     """
+
+    # id = models.IntegerField(blank=True, null=True)  # Prep for moving primary key
     resource = models.ForeignKey(Resource, blank=False, null=True, on_delete=models.CASCADE)
 
     # Choices for `driver` are set dynamically set when the admin form is displayed. This is because
     # when the model is loaded not all the apps are online so we can yet probe for installed drivers
     driver = models.CharField(blank=False, null=False, max_length=100,
                               choices=lazy(driver_choices, list)())
-    # FIXME: After remotehost is added set blank=false null=false and make this required
-    host = models.ForeignKey(RemoteHost, on_delete=models.DO_NOTHING, blank=True, null=True)
+    host = models.ForeignKey(RemoteHost, on_delete=models.DO_NOTHING, blank=False, null=False)
     config_json = models.TextField()
     name = models.SlugField(blank=False, null=False, max_length=30,
                             primary_key=True)  # FIXME: Don't use as primary so devices can share names
@@ -191,12 +192,12 @@ class Device(models.Model, ConfigJSON):
         # Check valid driver is used
         driver: AbstractShareableUsbDevice = self.get_driver()
         errors = self.validate_configuration_json(driver.CONFIGURATION_KEYS)
-        
+
         # Confirm driver is compatible with commuincator on host
         if self.host.communicator not in driver.COMPATIBLE_COMMUNICATORS:
             errors.append(f"Driver {self.driver} is does not support the communicator, "
                           f"{self.host.communicator}, on that remote host")
-        
+
         errors_message = ', '.join(errors)
         if errors:
             raise ValidationError({'config_json': errors_message})

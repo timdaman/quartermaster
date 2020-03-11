@@ -27,7 +27,7 @@ class VirtualHereOverSSH(AbstractShareableUsbDevice):
     USER_MATCHER = re.compile("^IN USE BY: (?P<user>.+)$", flags=re.MULTILINE)
     OK_MATCHER = re.compile("^OK$", flags=re.MULTILINE)
     NICKNAME_MATCHER = re.compile("^NICKNAME: (?P<nickname>.+)$", flags=re.MULTILINE)
-    CONFIGURATION_KEYS = ("hub_address", "device_address")
+    CONFIGURATION_KEYS = ("device_address")
     CMD_TIMEOUT_SEC = 10
     COMPATIBLE_COMMUNICATORS = ('SSH',)
 
