@@ -3,7 +3,6 @@ import re
 from typing import Optional, Tuple
 
 from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
-from quartermaster.ssh_helper import ssh_command
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +29,11 @@ class VirtualHereOverSSH(AbstractShareableUsbDevice):
     NICKNAME_MATCHER = re.compile("^NICKNAME: (?P<nickname>.+)$", flags=re.MULTILINE)
     CONFIGURATION_KEYS = ("hub_address", "device_address")
     CMD_TIMEOUT_SEC = 10
+    COMPATIBLE_COMMUNICATORS = ('SSH',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.communicator = self.device.host.get_communicator_obj()
 
     class VirtualHereDriverError(AbstractShareableUsbDevice.DeviceCommandError):
         pass
@@ -52,13 +53,17 @@ class VirtualHereOverSSH(AbstractShareableUsbDevice):
 
     def ssh(self, command: str) -> Tuple[int, str, str]:
         full_command = f"{self.vh_client_cmd} -t '{command}'"
-        return_code, stdout, stderr = ssh_command(command=full_command, host=self.hub_address)
+        return_code, stdout, stderr = self.communicator.execute_command(command=command)
         if return_code != 0:
-            message = f'Error: host={self.hub_address}, command={command}, rc={return_code}, ' \
+            message = f'Error: host={self.device.host}, command={command}, rc={return_code}, ' \
                       f'stdout={stdout}, stderr={stderr}'
             logger.error(message)
             raise self.DeviceCommandError(message)
         return return_code, stdout, stderr
+
+    def execute_command(self, command: str):
+        if self.communicator.__class__.__name__ == 'SSH':
+            return self.ssh(command)
 
     def client_service_not_running(self, output: str) -> bool:
         for error in (
@@ -90,7 +95,7 @@ class VirtualHereOverSSH(AbstractShareableUsbDevice):
 
     def get_online_state(self) -> bool:
         # Confirm device is online
-        device_output = self.vh_command(f"DEVICE INFO,{self.config['device_address']}")
+        device_output = self.vh_command(f"DEVICE INFO,{self.device.config['device_address']}")
         if 'ADDRESS: ' in device_output:
             return True
         return False

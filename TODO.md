@@ -20,9 +20,45 @@ Resources for USB power switching
   https://www.smartspate.com/how-to-convert-a-basic-usb-hub-into-driven-one/
 
    
-Update `RESERVATION_MAX_MINUTES`, store the expiration timeline in the DB and display to the user in GUI and CLIENT
-
 Tasks to update device status are not scalable as they are done serially. Look ay making them async, or break them up into subtasks.
     Move host information to separate table
     Set up tasks to process hosts in parallel
     Merge checks for share state and online state so only one connection is needed for both
+
+Windows support
+
+Update client to have a wait for connections command
+
+Andriod ADB support
+
+for all servers
+  schedule task
+    in task
+      for each connector
+        get all state information
+        update online status
+        if online
+          update share state
+
+
+Create autocomplete for adding host
+    automatically retrieve host key
+    display host key in record as read only
+
+Create autocomplete for adding device
+    automatically retrieve all suitable devices on host not being used elsewhere 
+    
+    
+Migration plan
+   create remote host table
+   add field to device
+   
+   for each dev
+     get host field
+     host = check if remote host exists for SSH
+     if not create remote host for ssh
+     host = new host
+     delete host field from device
+     update device host field to $host
+     update driver field to "USBIP"
+     save device

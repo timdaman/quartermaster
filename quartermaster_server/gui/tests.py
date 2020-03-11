@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 # Create your tests here.
@@ -32,6 +34,7 @@ class GUITestCase(TestCase):
 
     def test_view_reservation_active(self):
         self.resources[1].user = self.user
+        self.resources[1].last_reserved = datetime.now()
         self.resources[1].save()
         self.client.force_login(self.user)
         response = self.client.get(reverse('gui:view_reservation', kwargs={'resource_pk': 'RESOURCE_1'}), follow=False)
@@ -56,6 +59,7 @@ class GUITestCase(TestCase):
 
     def test_view_reservation_delete(self):
         self.resources[4].user = self.user
+        self.resources[4].last_reserved = datetime.now()
         self.resources[4].save()
 
         self.client.force_login(self.user)

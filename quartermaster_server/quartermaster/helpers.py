@@ -1,11 +1,11 @@
-# TODO: Cache connections
 import logging
 from typing import Iterable, TYPE_CHECKING
 
+from quartermaster.AbstractCommunicator import AbstractCommunicator
 from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
 
 if TYPE_CHECKING:
-    from data.models import Device
+    from data.models import Device, RemoteHost
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,15 @@ def for_all_devices(devices: Iterable['Device'], method: str):
         getattr(driver, method)()
 
 
-def get_driver_obj(device: 'Device'):
+def get_driver_obj(device: 'Device') -> AbstractShareableUsbDevice:
     for driver_impl in AbstractShareableUsbDevice.__subclasses__():
         if device.driver == driver_impl.__name__:
             return driver_impl(device)
     raise NotImplementedError(f"Driver for {device} is '{device.driver}' but was not found")
+
+
+def get_commincator_obj(remote_host: 'RemoteHost'):
+    for communicator_impl in AbstractCommunicator.__subclasses__():
+        if remote_host.communicator == communicator_impl.__name__:
+            return communicator_impl(remote_host)
+    raise NotImplementedError(f"Communicator for {remote_host} is '{remote_host.communicator}' but was not found")

@@ -47,7 +47,7 @@ A `Device` is the representation of a single USB devices in a single port.
 The `server` which is a central point of control. It maintains a inventory of resources and their status
 There are two basic methods of making use of a resource presented by Quartermaster
 
-An `agent` hosts USB devices devices that Quartermaster is configured to provision
+An `RemoteHost` hosts USB devices devices that Quartermaster is configured to provision
 
 A `client` which attached a remote USB device to use it
 

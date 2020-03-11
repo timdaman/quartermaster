@@ -1,7 +1,6 @@
-import json
 import logging
 
-from typing import TYPE_CHECKING, List, Optional, Dict
+from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from data.models import Device
@@ -11,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 class AbstractShareableUsbDevice(object):
     # Override this in subclasses or replace validate_configuration()
-    CONFIGURATION_KEYS = None
+    CONFIGURATION_KEYS: List[str] = None
+
+    COMPATIBLE_COMMUNICATORS: List[str] = None
 
     class DeviceError(Exception):
         """
@@ -41,8 +42,7 @@ class AbstractShareableUsbDevice(object):
 
     def __init__(self, device: 'Device'):
         self.device = device
-        self.config: Dict = json.loads(device.config_json)
-
+        
     def is_online(self) -> bool:
         logger.info(f"Checking is {self} is online")
         state = self.get_online_state()
@@ -83,11 +83,11 @@ class AbstractShareableUsbDevice(object):
 
     def validate_configuration(self) -> List[str]:
         errors_found = []
-        for key in self.config.keys():
+        for key in self.device.config.keys():
             if key not in self.CONFIGURATION_KEYS:
                 errors_found.append(f"Unsupported attribute, '{key}'")
         for key in self.CONFIGURATION_KEYS:
-            if key not in self.config:
+            if key not in self.device.config:
                 errors_found.append(f"Value for '{key}' is needed")
         return errors_found
 
