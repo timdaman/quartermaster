@@ -156,7 +156,7 @@ class Device(models.Model, ConfigJSON):
     Device represents a single USB resource that is being made available from a remote host
     """
 
-    # id = models.IntegerField(blank=True, null=True)  # Prep for moving primary key
+    id = models.IntegerField(blank=False, null=False)  # Prep for moving primary key
     resource = models.ForeignKey(Resource, blank=False, null=True, on_delete=models.CASCADE)
 
     # Choices for `driver` are set dynamically set when the admin form is displayed. This is because

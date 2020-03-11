@@ -7,7 +7,7 @@ from data.models import Device
 
 
 def remove_host_from_json(apps, schema_editor):
-    for device in Device.objects.all():
+    for device in Device.everything.all():
         config = device.config
         if 'host' in config:
             del config['host']
