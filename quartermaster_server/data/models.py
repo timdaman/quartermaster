@@ -155,8 +155,10 @@ class Device(models.Model, ConfigJSON):
     """
     Device represents a single USB resource that is being made available from a remote host
     """
+    class Meta:
+        unique_together = [['name', 'resource']]
 
-    id = models.IntegerField(blank=False, null=False)  # Prep for moving primary key
+    id = models.AutoField(primary_key=True)  # Prep for moving primary key
     resource = models.ForeignKey(Resource, blank=False, null=True, on_delete=models.CASCADE)
 
     # Choices for `driver` are set dynamically set when the admin form is displayed. This is because
@@ -165,11 +167,8 @@ class Device(models.Model, ConfigJSON):
                               choices=lazy(driver_choices, list)())
     host = models.ForeignKey(RemoteHost, on_delete=models.DO_NOTHING, blank=False, null=False)
     config_json = models.TextField()
-    name = models.SlugField(blank=False, null=False, max_length=30,
-                            primary_key=True)  # FIXME: Don't use as primary so devices can share names
+    name = models.SlugField(blank=False, null=False, max_length=30)
     online = models.BooleanField(default=True)
-
-    # FIXME: Unique should be name + pk combo
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
