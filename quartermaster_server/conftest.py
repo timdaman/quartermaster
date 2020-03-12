@@ -9,6 +9,7 @@ from data.models import Device, Resource, Pool, RemoteHost
 
 @pytest.fixture()
 def sample_remote_host():
+    # Test key information, not used anywhere else.
     return RemoteHost.objects.create(address='example.com', communicator="SSH",
                                      config_json='{'
                                                  '"host_key": "AAAAC3NzaC1lZDI1NTE5AAAAICmd8eZ0AP9SfNA7YSNJE3PGGiA2O8XD971aTyUOgB3r", '

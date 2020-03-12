@@ -26,7 +26,7 @@ and example is this
 
 class UsbipOverSSH(AbstractShareableUsbDevice):
     NO_REMOTE_DEVICES = 'usbip: info: no exportable devices found on '
-    CONFIGURATION_KEYS = ("bus_id")
+    CONFIGURATION_KEYS = ('bus_id',)
     USBIPD_NOT_RUNNING = 'error: could not connect to localhost:3240'
     MISSING_KERNEL_MODULE = 'error: unable to bind device on '
     USBIP_DRIVER_PATH = '/sys/bus/usb/drivers/usbip-host'

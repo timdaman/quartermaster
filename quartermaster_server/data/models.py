@@ -155,6 +155,7 @@ class Device(models.Model, ConfigJSON):
     """
     Device represents a single USB resource that is being made available from a remote host
     """
+
     class Meta:
         unique_together = [['name', 'resource']]
 
