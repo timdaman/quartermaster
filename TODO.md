@@ -62,3 +62,9 @@ Migration plan
      update device host field to $host
      update driver field to "USBIP"
      save device
+
+
+Update client to
+    embed default server url
+    change reservation arg to only need reservation number
+    add server arg to override default

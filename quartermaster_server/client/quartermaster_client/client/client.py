@@ -282,7 +282,7 @@ async def wait_for_commands(config: Namespace, teardown: asyncio.Event):
                 logger.debug(f"Listening on {config.listen_ip}:{config.listen_port} for commands")
                 await server.serve_forever()
         except Exception as e:
-            formatted_print(f"Exception when trying to to start command listener: {e}")
+            formatted_print(f"Exception when trying to to start command listener: {repr(e)}")
             teardown.set()
 
 

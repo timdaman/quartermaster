@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import serializers, generics, status, permissions, authentication
 from rest_framework.response import Response
 
-from data.models import Resource
+from data.models import Resource, Device
 from quartermaster.allocator import make_reservation, release_reservation, refresh_reservation
 
 
@@ -23,8 +23,9 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def get_devices(self, resource_pk):
         devices = []
+        device: Device # Type hint for the loop
         for device in self.instance.device_set.all():
-            devices.append({**device.config, 'driver': device.driver, 'name': str(device)})
+            devices.append({**device.config, 'host_address': device.host.address, 'driver': device.driver, 'name': str(device)})
         return devices
 
 

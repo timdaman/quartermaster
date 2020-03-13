@@ -126,14 +126,14 @@ class VirtualHereOverSSH(LocalDriver):
         args = ['-t', 'MANUAL HUB LIST']
         hub_list = await self.run_vh(args)
         for hub in hub_list.splitlines():
-            if hub.startswith(self.conf['hub_address']):  # Hub already connected
+            if hub.startswith(self.conf['host_address']):  # Hub already connected
                 break
         else:
-            args = ['-t', f"MANUAL HUB ADD,{self.conf['hub_address']}"]
+            args = ['-t', f"MANUAL HUB ADD,{self.conf['host_address']}"]
             output = await self.run_vh(args)
             if not self.OK_MATCHER.search(output):
                 raise self.CommandError(
-                    f"VirtualHere did not return 'OK' when connecting hub '{self.conf['hub_address']}', "
+                    f"VirtualHere did not return 'OK' when connecting hub '{self.conf['host_address']}', "
                     f"instead I got '{output}'")
 
     async def connect(self):

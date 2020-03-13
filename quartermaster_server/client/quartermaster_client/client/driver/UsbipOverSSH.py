@@ -50,11 +50,11 @@ class UsbipOverSSH(LocalDriver):
         return port is not None
 
     async def connect(self) -> None:
-        args = ['attach', '-r', self.conf['host'], '-b', self.conf['bus_id']]
+        args = ['attach', '-r', self.conf['host_address'], '-b', self.conf['bus_id']]
         try:
             await self.run_usbip(args)
         except self.CommandError as e:
-            print(f"Error attaching {self.conf['host']} {self.conf['bus_id']}, "
+            print(f"Error attaching {self.conf['host_address']} {self.conf['bus_id']}, "
                   f"rc={e.rc}, stdout={e.stdout}, stderr={e.stderr}")
             raise e
 
