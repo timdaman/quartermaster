@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 if TYPE_CHECKING:
     from data.models import Device
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class AbstractShareableUsbDevice(object):
+class AbstractShareableDevice(object):
     # Override this in subclasses or replace validate_configuration()
     CONFIGURATION_KEYS: List[str] = None
 

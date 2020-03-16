@@ -12,7 +12,7 @@ from django.forms import Textarea
 from django.utils.functional import lazy
 
 from quartermaster.AbstractCommunicator import AbstractCommunicator
-from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
+from quartermaster.AbstractShareableDevice import AbstractShareableDevice
 from quartermaster.helpers import get_driver_obj, get_commincator_obj
 
 
@@ -109,8 +109,8 @@ class Resource(models.Model):
         return self.last_check_in + settings.RESERVATION_CHECKIN_TIMEOUT_MINUTES
 
 
-def loaded_drivers() -> List[AbstractShareableUsbDevice]:
-    return AbstractShareableUsbDevice.__subclasses__()
+def loaded_drivers() -> List[AbstractShareableDevice]:
+    return AbstractShareableDevice.__subclasses__()
 
 
 def driver_choices():
@@ -185,12 +185,12 @@ class Device(models.Model, ConfigJSON):
     def in_use(self) -> bool:
         return self.resource.in_use
 
-    def get_driver(self) -> AbstractShareableUsbDevice:
+    def get_driver(self) -> AbstractShareableDevice:
         return get_driver_obj(self)
 
     def clean(self):
         # Check valid driver is used
-        driver: AbstractShareableUsbDevice = self.get_driver()
+        driver: AbstractShareableDevice = self.get_driver()
         errors = self.validate_configuration_json(driver.CONFIGURATION_KEYS)
 
         # Confirm driver is compatible with commuincator on host

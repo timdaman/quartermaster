@@ -68,3 +68,5 @@ Update client to
     embed default server url
     change reservation arg to only need reservation number
     add server arg to override default
+
+Get rid of json_config. Move to simple key-value, maybe something else.

@@ -3,7 +3,7 @@ import logging
 import paramiko
 from django.conf import settings
 
-from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
+from quartermaster.AbstractShareableDevice import AbstractShareableDevice
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ and example is this
 """
 
 
-class UsbipOverSSH(AbstractShareableUsbDevice):
+class UsbipOverSSH(AbstractShareableDevice):
     NO_REMOTE_DEVICES = 'usbip: info: no exportable devices found on '
     CONFIGURATION_KEYS = ('bus_id',)
     USBIPD_NOT_RUNNING = 'error: could not connect to localhost:3240'

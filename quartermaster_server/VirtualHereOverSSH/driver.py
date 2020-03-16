@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional, Tuple
 
-from quartermaster.AbstractShareableUsbDevice import AbstractShareableUsbDevice
+from quartermaster.AbstractShareableDevice import AbstractShareableDevice
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ and example is this
 """
 
 
-class VirtualHereOverSSH(AbstractShareableUsbDevice):
+class VirtualHereOverSSH(AbstractShareableDevice):
     USER_MATCHER = re.compile("^IN USE BY: (?P<user>.+)$", flags=re.MULTILINE)
     OK_MATCHER = re.compile("^OK$", flags=re.MULTILINE)
     NICKNAME_MATCHER = re.compile("^NICKNAME: (?P<nickname>.+)$", flags=re.MULTILINE)
@@ -35,7 +35,7 @@ class VirtualHereOverSSH(AbstractShareableUsbDevice):
         super().__init__(*args, **kwargs)
         self.communicator = self.device.host.get_communicator_obj()
 
-    class VirtualHereDriverError(AbstractShareableUsbDevice.DeviceCommandError):
+    class VirtualHereDriverError(AbstractShareableDevice.DeviceCommandError):
         pass
 
     class VirtualHereExecutionError(VirtualHereDriverError):
