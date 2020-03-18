@@ -1,8 +1,7 @@
 import logging
+from typing import TYPE_CHECKING, List, Dict, Type, Iterable, Any, Tuple, NoReturn
 
-from typing import TYPE_CHECKING, List, , Literal, Dict
-
-from quartermaster.AbstractShareableDevice import AbstractShareableDevice
+from quartermaster.AbstractCommunicator import AbstractCommunicator
 
 if TYPE_CHECKING:
     from data.models import Device, RemoteHost
@@ -17,35 +16,59 @@ class AbstractRemoteHostDriver(object):
     some operations such as getting status, can be performed on many devices at once.
     """
 
-    DEVICE_CLASS: AbstractShareableDevice
+    DEVICE_CLASS: Type['AbstractShareableDeviceDriver']
 
+    SUPPORTED_COMMUNICATORS: Tuple[str] = None
 
-    ONLINE_STATE_TYPE = Literal['Online', 'Offline', 'Missing', 'Unknown']
-    SHARE_STATE_TYPE = Literal['Shared', 'Unshared', 'NA', 'Unknown']
+    class HostError(Exception):
+        """
+        Generic error when trying to interact with device
+        """
+
+        def __init__(self, message: str = None):
+            self.message = message
+
+    class HostConnectionError(HostError):
+        """
+        Error related to setting up connection to remote host that hosts device
+        """
+        pass
+
+    class HostCommandError(HostError):
+        """
+        This error indicates a problem trying configure device on remote host
+        """
+        pass
 
     def __init__(self, host: 'RemoteHost'):
         self.host = host
+        self.communicator: AbstractCommunicator = host.get_communicator_obj()
 
-    def devices(self) -> List['Device']:
-        self.host.device_set.filter(driver=self.DEVICE_CLASS.__name__)
+    @property
+    def address(self):
+        return self.host.address
 
-    def online_statuses(self) -> List[Dict['Device', ONLINE_STATE_TYPE]]:
+    @property
+    def is_reachable(self) -> bool:
+        return self.communicator.is_host_reachable()
 
-        for device in self.devices():
-            device.
+    def devices(self) -> Iterable['Device']:
+        return self.host.device_set.filter(driver=self.DEVICE_CLASS.__name__)
 
-        logger.info(f"Checking is {self} is online")
-        state = self.get_online_state()
-        logger.info(f"{self} is online={state}")
-        return state
+    def get_device_driver(self, device: 'Device') -> 'AbstractShareableDeviceDriver':
+        return self.DEVICE_CLASS(device=device, host=self)
+
+    def online_statuses(self) -> List[Dict['Device', Any]]:
+        raise NotImplemented
 
     def update_statuses(self):
-        
-    def share_statuses(self) -> List[Dict['Device', SHARE_STATE_TYPE]]:
-        logger.info(f"Get share stat of {self}")
-        state = self.get_share_state()
-        logger.info(f"{self} shared={state}")
-        return state
+        raise NotImplemented
+
+    def share_statuses(self) -> Dict[Any, Any]:
+        raise NotImplemented
+
+    def update_device_states(self, devices: Iterable['Device']) -> NoReturn:
+        raise NotImplemented
 
     def __str__(self):
-        return f"RemoteHostDriver - {self.device}"
+        return f"RemoteHostDriver - {self.host}"

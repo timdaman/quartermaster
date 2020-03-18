@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
-from typing import List
+from functools import lru_cache
+from typing import List, Set, Type
 
 from django.conf import settings
 from django.contrib import admin
@@ -12,7 +13,8 @@ from django.forms import Textarea
 from django.utils.functional import lazy
 
 from quartermaster.AbstractCommunicator import AbstractCommunicator
-from quartermaster.AbstractShareableDevice import AbstractShareableDevice
+from quartermaster.AbstractShareableDeviceDriver import AbstractShareableDeviceDriver
+from quartermaster.AbstractRemoteHostDriver import AbstractRemoteHostDriver
 from quartermaster.helpers import get_driver_obj, get_commincator_obj
 
 
@@ -109,13 +111,21 @@ class Resource(models.Model):
         return self.last_check_in + settings.RESERVATION_CHECKIN_TIMEOUT_MINUTES
 
 
-def loaded_drivers() -> List[AbstractShareableDevice]:
-    return AbstractShareableDevice.__subclasses__()
+@lru_cache
+def loaded_device_drivers() -> List[Type[AbstractShareableDeviceDriver]]:
+    return AbstractShareableDeviceDriver.__subclasses__()
 
 
-def driver_choices():
-    return sorted(list(((driver.__name__, driver.__name__) for driver in loaded_drivers())))
+def device_driver_choices():
+    return sorted(list(((driver.__name__, driver.__name__) for driver in loaded_device_drivers())))
 
+@lru_cache
+def loaded_host_drivers() -> List[Type[AbstractRemoteHostDriver]]:
+    return AbstractRemoteHostDriver.__subclasses__()
+
+
+def device_host_choices():
+    return sorted(list(((driver.__name__, driver.__name__) for driver in loaded_device_drivers())))
 
 def loaded_communicators() -> List[AbstractCommunicator]:
     return AbstractCommunicator.__subclasses__()
@@ -165,7 +175,7 @@ class Device(models.Model, ConfigJSON):
     # Choices for `driver` are set dynamically set when the admin form is displayed. This is because
     # when the model is loaded not all the apps are online so we can yet probe for installed drivers
     driver = models.CharField(blank=False, null=False, max_length=100,
-                              choices=lazy(driver_choices, list)())
+                              choices=lazy(device_driver_choices, list)())
     host = models.ForeignKey(RemoteHost, on_delete=models.DO_NOTHING, blank=False, null=False)
     config_json = models.TextField()
     name = models.SlugField(blank=False, null=False, max_length=30)
@@ -185,16 +195,16 @@ class Device(models.Model, ConfigJSON):
     def in_use(self) -> bool:
         return self.resource.in_use
 
-    def get_driver(self) -> AbstractShareableDevice:
+    def get_driver(self) -> AbstractShareableDeviceDriver:
         return get_driver_obj(self)
 
     def clean(self):
         # Check valid driver is used
-        driver: AbstractShareableDevice = self.get_driver()
+        driver: AbstractShareableDeviceDriver = self.get_driver()
         errors = self.validate_configuration_json(driver.CONFIGURATION_KEYS)
 
-        # Confirm driver is compatible with commuincator on host
-        if self.host.communicator not in driver.COMPATIBLE_COMMUNICATORS:
+        # Confirm driver is compatible with communicator on host
+        if self.host.communicator not in driver.host_driver.SUPPORTED_COMMUNICATORS:
             errors.append(f"Driver {self.driver} is does not support the communicator, "
                           f"{self.host.communicator}, on that remote host")
 

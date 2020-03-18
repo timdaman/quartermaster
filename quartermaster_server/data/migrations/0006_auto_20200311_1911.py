@@ -21,7 +21,7 @@ def remove_host_from_json(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('data', '0004_auto_20200310_1424'),
+        ('data', '0005_auto_20200310_1424'),
     ]
 
     operations = [

@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Type
 
 if TYPE_CHECKING:
     from data.models import Device
@@ -8,11 +8,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class AbstractShareableDevice(object):
+class AbstractShareableDeviceDriver(object):
     # Override this in subclasses or replace validate_configuration()
     CONFIGURATION_KEYS: List[str] = None
 
-    COMPATIBLE_COMMUNICATORS: List[str] = None
+    HOST_CLASS: Type['AbstractRemoteHostDriver']
+
+    host_driver: 'AbstractRemoteHostDriver' = None
 
     class DeviceError(Exception):
         """
@@ -40,9 +42,13 @@ class AbstractShareableDevice(object):
         """
         pass
 
-    def __init__(self, device: 'Device'):
+    def __init__(self, device: 'Device', host: Optional['AbstractRemoteHostDriver'] = None):
         self.device = device
-        
+        if host:
+            self.host_driver = host
+        else:
+            self.host_driver = self.HOST_CLASS(host=device.host)
+
     def is_online(self) -> bool:
         logger.info(f"Checking is {self} is online")
         state = self.get_online_state()
