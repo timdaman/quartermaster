@@ -9,6 +9,14 @@ class CommandResponse(NamedTuple):
 
 
 class AbstractCommunicator(object):
+    """
+    This is the base class that defines how drivers communicate remotes hosts.
+    If you want to support some other communication protocol subclass this and implement it's commands.
+
+    This base class is structured around the concept all of the activities can be accomplished vis command line
+    interface on the remote host.
+    """
+
     # Override this in subclasses or replace validate_configuration()
     CONFIGURATION_KEYS: List[str] = None
 

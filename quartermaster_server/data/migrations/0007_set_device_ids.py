@@ -14,7 +14,7 @@ def add_device_ids(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('data', '0006_device_id'),
+        ('data', '0006_auto_20200311_1911'),
     ]
 
     operations = [

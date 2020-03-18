@@ -28,6 +28,8 @@ Tasks to update device status are not scalable as they are done serially. Look a
 Windows support
 
 Update client to have a wait for connections command
+   background mode?
+     decide where to log
 
 Andriod ADB support
 
@@ -68,3 +70,21 @@ Update client to
     embed default server url
     change reservation arg to only need reservation number
     add server arg to override default
+
+Get rid of json_config. Move to simple key-value, maybe something else.
+
+
+Remove dependence on usbip command, probe /sys directly
+    """
+    From usbip source code,
+    /* Take only USB devices that are not hubs and do not have
+     * the bInterfaceNumber attribute, i.e. are not interfaces.
+     */
+    """
+    for i in $(find /sys/bus/usb/devices/); do [ ! -f $i/bInterfaceNumber ] && [ -f  "$i/bDeviceClass" ] && grep -qv '09' "$i/bDeviceClass" && echo $(basename $i),$(cat $i/idProduct),$(cat $i/idVendor),$(cat $i/manufacturer),$(cat $i/product); done
+
+
+Update UI to group devices by pool
+
+
+Make example driver app

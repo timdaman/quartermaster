@@ -1,1 +1,1 @@
-from VirtualHereOverSSH.driver import VirtualHereOverSSH
+from VirtualHereOverSSH.driver import VirtualHereOverSSH, VirtualHereOverSSHHost

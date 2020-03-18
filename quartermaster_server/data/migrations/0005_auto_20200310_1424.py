@@ -14,7 +14,7 @@ def initialize_hosts(apps, schema_editor):
         elif 'hub_address' in device_config:
             host = device_config['hub_address']
         else:
-            raise Exception(f"Could not find server in {device.config_json}")
+            break
         if not RemoteHost.objects.filter(address=host, communicator="SSH").exists():
             new_host = RemoteHost(address=host, communicator="SSH")
             new_host.save()
@@ -22,7 +22,7 @@ def initialize_hosts(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('data', '0003_auto_20200310_1423'),
+        ('data', '0004_device_id'),
     ]
 
     operations = [

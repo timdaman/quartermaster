@@ -1,8 +1,9 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
-from UsbipOverSSH import UsbipOverSSH
+from UsbipOverSSH.driver import UsbipOverSSHHost
+from quartermaster.AbstractCommunicator import CommandResponse
 
 sample_bus_id = '1-11'
 sample_hostname = 'example.com'
@@ -21,51 +22,41 @@ def sample_list_stdout() -> str:
 
 @pytest.mark.django_db
 def test_device_is_shared(sample_shared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = 0, '', ''
+    with patch('UsbipOverSSH.UsbipOverSSH.get_share_state') as share_state:
+        share_state.return_value = True
         driver = sample_shared_device.get_driver()
         assert True == driver.is_shared()
 
 
 @pytest.mark.django_db
 def test_device_is_not_shared(sample_unshared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = 0, 'missing', ''
+    with patch('UsbipOverSSH.UsbipOverSSH.get_share_state') as share_state:
+        share_state.return_value = False
         driver = sample_unshared_device.get_driver()
         assert False == driver.is_shared()
 
 
 @pytest.mark.django_db
 def test_share_devices_double_on(sample_shared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command, \
-            patch('UsbipOverSSH.UsbipOverSSH.is_shared') as device_is_shared:
-        device_is_shared.return_value = True
+    with patch('UsbipOverSSH.UsbipOverSSH.execute_command') as execute_command, \
+            patch('UsbipOverSSH.UsbipOverSSH.get_share_state') as share_state:
+        share_state.return_value = [True, True]
         driver = sample_shared_device.get_driver()
         driver.share()
-        assert 0 == ssh_command.call_count
-
-
-@pytest.mark.django_db
-def test_share_devices_double_on(sample_shared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command, \
-            patch('UsbipOverSSH.UsbipOverSSH.is_shared') as device_is_shared:
-        device_is_shared.return_value = True
-        driver = sample_shared_device.get_driver()
-        driver.share()
-        assert 0 == ssh_command.call_count
+        assert 0 == execute_command.call_count
 
 
 @pytest.mark.django_db(transaction=True)
 def test_share_devices_initial_off(sample_unshared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command, \
-            patch('UsbipOverSSH.UsbipOverSSH.is_shared') as device_is_shared:
-        device_is_shared.return_value = False
+    with patch('UsbipOverSSH.UsbipOverSSH.execute_command') as execute_command, \
+            patch('UsbipOverSSH.UsbipOverSSH.get_share_state') as get_share_state:
+        get_share_state.return_value = False
         # A successful attachment has no output
-        ssh_command.return_value = (0, '', None)
+        execute_command.return_value = CommandResponse(0, '', '')
         driver = sample_unshared_device.get_driver()
 
         driver.share()
-        assert 1 == ssh_command.call_count
+        assert 1 == execute_command.call_count
 
 
 @pytest.mark.django_db
@@ -81,15 +72,15 @@ def test_unshare_devices_double_off(sample_unshared_device):
 
 @pytest.mark.django_db(transaction=True)
 def test_turn_off_devices_initial_on(sample_shared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command, \
-            patch('UsbipOverSSH.UsbipOverSSH.is_shared') as device_is_shared:
-        device_is_shared.return_value = True
+    with patch('UsbipOverSSH.UsbipOverSSH.execute_command') as execute_command, \
+            patch('UsbipOverSSH.UsbipOverSSH.get_share_state') as get_share_state:
+        get_share_state.return_value = True
         # A successful attachment has no output
-        ssh_command.return_value = (0, '', None)
+        execute_command.return_value = (0, '', '')
         driver = sample_shared_device.get_driver()
 
         driver.unshare()
-        assert 2 == ssh_command.call_count
+        assert 1 == execute_command.call_count
 
 
 @pytest.mark.django_db
@@ -100,32 +91,26 @@ def test_host_address(sample_shared_device):
 
 @pytest.mark.django_db
 def test_get_online_state_online(sample_shared_device, sample_list_stdout):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = 0, sample_list_stdout, ''
-        driver = sample_shared_device.get_driver()
-        assert True == driver.get_online_state()
+    driver = sample_shared_device.get_driver()
+    mock_host_driver = MagicMock()
+    mock_host_driver.get_device_list.return_value = {sample_bus_id: None}  # All we check for is the presence of the key
+    driver.host_driver = mock_host_driver
+    assert driver.get_online_state()
 
 
 @pytest.mark.django_db
 def test_get_online_state_offline(sample_unshared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = (0, '', '')
-        driver = sample_unshared_device.get_driver()
-        assert False == driver.get_online_state()
-
-
-@pytest.mark.django_db
-def test_get_online_state_error(sample_unshared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = (1, '', '')
-        driver = sample_unshared_device.get_driver()
-        with pytest.raises(UsbipOverSSH.DeviceCommandError):
-            driver.get_online_state()
+    driver = sample_unshared_device.get_driver()
+    mock_host_driver = MagicMock()
+    mock_host_driver.get_device_list.return_value = {sample_bus_id: None}  # All we check for is the presence of the key
+    driver.host_driver = mock_host_driver
+    assert not driver.get_online_state()
 
 
 @pytest.mark.django_db
 def test_get_online_state_none(sample_unshared_device):
-    with patch('UsbipOverSSH.UsbipOverSSH.ssh') as ssh_command:
-        ssh_command.return_value = (0, '', UsbipOverSSH.NO_REMOTE_DEVICES)
-        driver = sample_unshared_device.get_driver()
-        assert False == driver.get_online_state()
+    driver = sample_unshared_device.get_driver()
+    mock_host_driver = MagicMock()
+    mock_host_driver.execute_command.return_value = CommandResponse(0, '', UsbipOverSSHHost.NO_REMOTE_DEVICES)
+    driver.host_driver = mock_host_driver
+    assert False == driver.get_online_state()

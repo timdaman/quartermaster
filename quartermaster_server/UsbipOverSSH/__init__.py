@@ -1,1 +1,1 @@
-from .driver import UsbipOverSSH
+from .driver import UsbipOverSSH, UsbipOverSSHHost
