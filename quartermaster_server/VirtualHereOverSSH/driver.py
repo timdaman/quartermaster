@@ -39,7 +39,7 @@ class VirtualHereOverSSHHost(AbstractRemoteHostDriver):
             message = f'Error: host={self.host.address}, command={command}, rc={response.return_code}, ' \
                       f'stdout={response.stdout}, stderr={response.stderr}'
             logger.error(message)
-            raise self.DeviceCommandError(message)
+            raise self.HostCommandError(message)
         return response
 
     def client_service_not_running(self, output: str) -> bool:
@@ -55,7 +55,7 @@ class VirtualHereOverSSHHost(AbstractRemoteHostDriver):
             full_command = [self.vh_client_cmd, '-t', f"'{command}'"]
             response = self.ssh(" ".join(full_command))
             return response
-        except self.DeviceCommandError as e:
+        except self.HostCommandError as e:
             if self.client_service_not_running(e.message):
                 raise self.VirtualHereExecutionError(
                     f"VirtualHere client service is needed but does not appear to be running on {self.host.address}")

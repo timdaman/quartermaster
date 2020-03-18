@@ -24,12 +24,6 @@ class AbstractShareableDeviceDriver(object):
         def __init__(self, message: str = None):
             self.message = message
 
-    class DeviceConnectionError(DeviceError):
-        """
-        Error related to setting up connection to remote host that hosts device
-        """
-        pass
-
     class DeviceNotFound(DeviceError):
         """
         This error indicates the target device was not found on the remote host

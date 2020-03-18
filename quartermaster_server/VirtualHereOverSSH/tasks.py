@@ -1,28 +1,30 @@
-import logging
-
 from django.conf import settings
-from huey import crontab
-from huey.contrib.djhuey import db_periodic_task, lock_task
-
-from data.models import Device
-from VirtualHereOverSSH import VirtualHereOverSSH
-
-logger = logging.getLogger(__name__)
 
 if __package__ in settings.INSTALLED_APPS:
+    import logging
+
+    from huey import crontab
+    from huey.contrib.djhuey import db_periodic_task, lock_task
+
+    from data.models import RemoteHost
+    from VirtualHereOverSSH import VirtualHereOverSSH, VirtualHereOverSSHHost
+
+    logger = logging.getLogger(__name__)
+
+
     @db_periodic_task(crontab(minute='*/15'))
     @lock_task('check_device_nicknames')
     def check_device_nicknames():
-        for device in Device.objects.filter(driver=VirtualHereOverSSH.__name__):
-            device_driver: VirtualHereOverSSH = device.get_driver_obj()
-            try:
-                nickname = device_driver.get_nickname()
-            except VirtualHereOverSSH.DeviceError:
-                logger.exception(f"Error getting device nickname. Device={device}")
-                continue
-
-            nickname_expected = device.name
-            if nickname != nickname_expected:
-                logger.error(f"Device nickname is incorrect. Device is nickname is '{nickname}' "
-                             f"but but should be '{nickname_expected}'. Device={device}")
-                device_driver.set_nickname()
+        for host in RemoteHost.objects.filter(device__driver=VirtualHereOverSSH.__name__).distinct():
+            host_driver = VirtualHereOverSSHHost(host=host)
+            states = host_driver.get_states()
+            for device in host_driver.devices():
+                device_address = device.config['device_address']
+                if device_address not in states:
+                    continue
+                if states[device_address].nickname != device.name:
+                    logger.error(f"Device nickname is incorrect. "
+                                 f"Device is nickname is '{states[device_address].nickname}' "
+                                 f"but but should be '{device.name}'. Device={device}")
+                    device_driver = host_driver.get_device_driver(device)
+                    device_driver.set_nickname()
