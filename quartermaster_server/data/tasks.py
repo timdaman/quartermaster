@@ -4,7 +4,8 @@ from django.utils.timezone import now
 from huey import crontab
 from huey.contrib.djhuey import lock_task, db_periodic_task, db_task
 
-from data.models import Resource, RemoteHost, loaded_host_drivers
+from data.models import Resource, RemoteHost
+from quartermaster import plugins
 from quartermaster.allocator import release_reservation
 
 logger = logging.getLogger(__name__)
@@ -28,9 +29,10 @@ def confirm_device_state():
 @db_task()
 def update_host_devices(host: RemoteHost):
     # For each driver
-    for host_driver_class in loaded_host_drivers():
+    for host_driver_class in plugins.remote_host_classes().values():
         # If compatible with communicator
-        if host.communicator not in host_driver_class.SUPPORTED_COMMUNICATORS:
+        if host.communicator not in host_driver_class.SUPPORTED_COMMUNICATORS \
+                or host.type not in host_driver_class.SUPPORTED_HOST_TYPES:
             continue
 
         host_driver = host_driver_class(host=host)
@@ -44,4 +46,6 @@ def update_host_devices(host: RemoteHost):
                 device.save()
             continue
 
-        host_driver.update_device_states(devices_to_update)
+        # If no devices are being check do try to communicate with host as that could end up raising exceptions
+        if devices_to_update.count() > 0:
+            host_driver.update_device_states(devices_to_update)

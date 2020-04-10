@@ -1,1 +1,2 @@
 # Put python packages needed for your local configuration here
+django-auth-ldap

@@ -13,6 +13,7 @@ from quartermaster.allocator import make_reservation, release_reservation, refre
 class ReservationSerializer(serializers.ModelSerializer):
     reservation_url = serializers.SerializerMethodField()
     devices = serializers.SerializerMethodField()
+    lookup_url_kwarg = 'resource_pk'
 
     class Meta:
         model = Resource
@@ -23,9 +24,10 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def get_devices(self, resource_pk):
         devices = []
-        device: Device # Type hint for the loop
+        device: Device  # Type hint for the loop
         for device in self.instance.device_set.all():
-            devices.append({**device.config, 'host_address': device.host.address, 'driver': device.driver, 'name': str(device)})
+            devices.append(
+                {**device.config, 'host_address': device.host.address, 'driver': device.driver, 'name': str(device)})
         return devices
 
 

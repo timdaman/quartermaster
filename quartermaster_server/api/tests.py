@@ -12,7 +12,7 @@ class TestViews(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.device_driver = 'VirtualHereOverSSH'
+        cls.device_driver = 'USB_Quartermaster_VirtualHere'
         cls.user = User.objects.create_superuser(username="TEST_USER_API",
                                                  email="not_real@example.com",
                                                  password="lolSecret")

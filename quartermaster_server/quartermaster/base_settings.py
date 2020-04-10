@@ -33,10 +33,7 @@ INSTALLED_APPS = [
     'data',  # This is the core datastore that everything else hangs off of
     'gui',  # UI for user interactive interface
     'api',  # API, used to support client
-    'client',  # Download link for client software
 ]
-
-# FIXME, detect installed drivers and display error is none
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -61,6 +58,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'quartermaster.context_processors.add_server_base_url'
             ],
         },
     },
@@ -133,7 +131,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"": {"level": "INFO", "handlers": ["console"]}}, # Catch-all
+    "loggers": {"": {"level": "INFO", "handlers": ["console"]}},  # Catch-all
 }
 
 SSH_CONNECT_TIMEOUT = 1.0

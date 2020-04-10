@@ -11,5 +11,9 @@ RUN pip install -r /local_requirements.txt
 
 WORKDIR /quartermaster
 COPY quartermaster_server /quartermaster
+COPY plugins /plugins
+
+ENV PYTHONPATH=/plugins
+
 COPY deploy/gunicorn_config.py /
 CMD [ "gunicorn", "--conf", "/gunicorn_config.py", "quartermaster.wsgi"]

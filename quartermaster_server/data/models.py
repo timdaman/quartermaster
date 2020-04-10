@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
-from functools import lru_cache
-from typing import List, Set, Type
+from typing import List, Type, Tuple
 
 from django.conf import settings
 from django.contrib import admin
@@ -12,10 +11,8 @@ from django.db.models import Q, Count
 from django.forms import Textarea
 from django.utils.functional import lazy
 
-from quartermaster.AbstractCommunicator import AbstractCommunicator
-from quartermaster.AbstractShareableDeviceDriver import AbstractShareableDeviceDriver
-from quartermaster.AbstractRemoteHostDriver import AbstractRemoteHostDriver
-from quartermaster.helpers import get_driver_obj, get_commincator_obj
+from USB_Quartermaster_common import AbstractShareableDeviceDriver, AbstractCommunicator, plugins
+from quartermaster.helpers import get_driver_obj, get_communicator_obj, get_communicator_class
 
 
 class ConfigJSON(object):
@@ -34,11 +31,7 @@ class ConfigJSON(object):
             data = json.loads(self.config_json, strict=False)
             data_keys = set(data.keys())
             required_keys = set(keys)
-
-            extra_keys = data_keys - required_keys
             missing_keys = required_keys - data_keys
-            for key in extra_keys:
-                errors_found.append(f"Unsupported attribute, '{key}'")
             for key in missing_keys:
                 errors_found.append(f"Value for '{key}' is needed")
         except json.JSONDecodeError as e:
@@ -111,43 +104,42 @@ class Resource(models.Model):
         return self.last_check_in + settings.RESERVATION_CHECKIN_TIMEOUT_MINUTES
 
 
-@lru_cache
-def loaded_device_drivers() -> List[Type[AbstractShareableDeviceDriver]]:
-    return AbstractShareableDeviceDriver.__subclasses__()
+def device_driver_choices() -> List[Tuple[str, str]]:
+    driver_classes = plugins.shareable_device_classes()
+    return sorted(list((driver.IDENTIFIER, driver.IDENTIFIER) for driver in driver_classes))
 
 
-def device_driver_choices():
-    return sorted(list(((driver.__name__, driver.__name__) for driver in loaded_device_drivers())))
-
-@lru_cache
-def loaded_host_drivers() -> List[Type[AbstractRemoteHostDriver]]:
-    return AbstractRemoteHostDriver.__subclasses__()
+def device_host_choices() -> List[Tuple[str, str]]:
+    driver_classes = plugins.remote_host_classes()
+    return sorted(list((driver.IDENTIFIER, driver.IDENTIFIER) for driver in driver_classes))
 
 
-def device_host_choices():
-    return sorted(list(((driver.__name__, driver.__name__) for driver in loaded_device_drivers())))
-
-def loaded_communicators() -> List[AbstractCommunicator]:
-    return AbstractCommunicator.__subclasses__()
-
-
-def communicator_choices() -> List[AbstractCommunicator]:
-    return sorted(list((communicator.__name__, communicator.__name__) for communicator in loaded_communicators()))
+def communicator_choices() -> List[Tuple[str, str]]:
+    communicator_classes = plugins.communicator_classes()
+    return sorted(list((driver.IDENTIFIER, driver.IDENTIFIER) for driver in communicator_classes))
 
 
 class RemoteHost(models.Model, ConfigJSON):
+    # Keep this list sorted to reduce how many DB migrations are generated
+    SUPPORTED_HOST_TYPES = sorted(("Darwin", "Linux_AMD64", "Windows"))
+
     address = models.CharField(max_length=256, null=False, blank=False)
     communicator = models.CharField(max_length=50, null=False, blank=False,
                                     choices=lazy(communicator_choices, list)())
     config_json = models.TextField()
+    type = models.CharField(max_length=20, null=False, blank=False,
+                            choices=((sht, sht) for sht in SUPPORTED_HOST_TYPES))
 
     def get_communicator_obj(self) -> AbstractCommunicator:
-        return get_commincator_obj(self)
+        return get_communicator_obj(self)
+
+    def get_communicator_class(self) -> Type[AbstractCommunicator]:
+        return get_communicator_class(self.communicator)
 
     def clean(self):
         # Check valid driver is used
-        communicator = self.get_communicator_obj()
-        errors = self.validate_configuration_json(communicator.CONFIGURATION_KEYS)
+        communicator_class = self.get_communicator_class()
+        errors = self.validate_configuration_json(communicator_class.CONFIGURATION_KEYS)
         errors_message = ', '.join(errors)
         if errors:
             raise ValidationError({'config_json': errors_message})
@@ -173,7 +165,7 @@ class Device(models.Model, ConfigJSON):
     resource = models.ForeignKey(Resource, blank=False, null=True, on_delete=models.CASCADE)
 
     # Choices for `driver` are set dynamically set when the admin form is displayed. This is because
-    # when the model is loaded not all the apps are online so we can yet probe for installed drivers
+    # when the model is loaded not all the apps are online so we can yet probe for installed plugins
     driver = models.CharField(blank=False, null=False, max_length=100,
                               choices=lazy(device_driver_choices, list)())
     host = models.ForeignKey(RemoteHost, on_delete=models.DO_NOTHING, blank=False, null=False)
@@ -200,13 +192,23 @@ class Device(models.Model, ConfigJSON):
 
     def clean(self):
         # Check valid driver is used
-        driver: AbstractShareableDeviceDriver = self.get_driver()
-        errors = self.validate_configuration_json(driver.CONFIGURATION_KEYS)
+        shareable_device_driver: AbstractShareableDeviceDriver = self.get_driver()
+        errors = self.validate_configuration_json(shareable_device_driver.CONFIGURATION_KEYS)
 
         # Confirm driver is compatible with communicator on host
-        if self.host.communicator not in driver.host_driver.SUPPORTED_COMMUNICATORS:
+        if self.host.communicator not in shareable_device_driver.host_driver.SUPPORTED_COMMUNICATORS:
             errors.append(f"Driver {self.driver} is does not support the communicator, "
                           f"{self.host.communicator}, on that remote host")
+
+        # Confirm communicator is compatible with with host type
+        communicator_class = get_communicator_class(self.host.communicator)
+        if self.host.type not in communicator_class.SUPPORTED_HOST_TYPES:
+            errors.append(f"Communicator {self.host.communicator} is does not support the host type {self.host.type}"
+                          f" of {self.host}")
+
+        # Confirm driver is compatible with host type
+        if self.host.type not in shareable_device_driver.host_driver.SUPPORTED_HOST_TYPES:
+            errors.append(f"Driver {self.driver} is does not support this type of remote host, {self.host.type}.")
 
         errors_message = ', '.join(errors)
         if errors:

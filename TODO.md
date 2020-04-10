@@ -32,6 +32,8 @@ Update client to have a wait for connections command
      decide where to log
 
 Andriod ADB support
+    VirtualHere driver works better
+        I think there is a issue with the USBIP driver where adb size limits on reads are not honored.
 
 for all servers
   schedule task
@@ -88,3 +90,10 @@ Update UI to group devices by pool
 
 
 Make example driver app
+
+
+Move drivers to plugin model
+    Namespace usb_quartermaster_*
+    Make USB_Quartermaster_common package with
+        doc
+    Figure out how to impliment integration plug-ins
