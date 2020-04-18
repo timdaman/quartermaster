@@ -4,3 +4,5 @@ __pycache__
 **/__pycache__
 **/.DS_Store
 .env
+plugins
+USB_Quartermaster_client

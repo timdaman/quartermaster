@@ -1,3 +1,0 @@
-#TeamCity build properties without 'system.' prefix
-#Tue Dec 03 23:48:47 EST 2019
-teamcity.build.id=614556
